@@ -1,0 +1,26 @@
+intell-nextword/
+├── main.py                    # FastAPI server
+├── requirements.txt           # Dependencies
+├── train_models.py            # To train n-gram models
+└── web/
+    └── index.html            # Frontend HTML  
+app/
+├── __init__.py               # Empty file (just to make it a Python package)
+├── ngram.py                  # N-gram model implementation
+├── spellchecker.py           # Spell checking functionality
+└── data/                     # Your datasets and trained models
+    ├── en.txt                # English corpus
+    ├── hi.txt                # Hindi corpus
+    ├── te.txt                # Telugu corpus
+    ├── ta.txt                # Tamil corpus
+    ├── kn.txt                # Kannada corpus
+    ├── fr.txt                # French corpus
+    ├── en_word_frequency.txt # English dictionary
+    ├── hi_word_frequency.txt # Hindi dictionary
+    └── ... (other language word frequency files)
+
+
+
+  how to run the code 
+  1. python train_models.py 
+  2.uvicorn main:app --reload
