@@ -1,0 +1,15 @@
+# Python virtual environment
+venv/
+env/
+*.pyc
+__pycache__/
+
+# Large model files
+models/
+*.bin
+*.pt
+*.ckpt
+
+# FastAPI static cache
+*.log
+.cache/
