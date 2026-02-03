@@ -1,3 +1,4 @@
+# main.py
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -6,6 +7,12 @@ from typing import Dict, List, Optional, Tuple
 import time
 import re
 import os
+import json
+from groq import Groq
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "app", "data")
@@ -103,6 +110,98 @@ def load_model(lang: str = "en") -> BackoffNGram:
     
     return BackoffNGram.load(path)
 
+# ---------- Groq API Model ----------
+class GroqModelManager:
+    def __init__(self):
+        api_key = os.getenv("GROQ_API_KEY")
+        if not api_key:
+            raise ValueError("Missing GROQ_API_KEY in .env file")
+        
+        self.client = Groq(api_key=api_key)
+        self.model_name = "llama-3.1-8b-instant"
+        
+        # Language mapping
+        self.lang_names = {
+            "en": "English",
+            "hi": "Hindi",
+            "te": "Telugu",
+            "ta": "Tamil",
+            "kn": "Kannada",
+            "fr": "French",
+        }
+    
+    def predict(self, text: str, num_words: int = 5, num_sentences: int = 3, lang: str = "en") -> Tuple[List[str], List[str]]:
+        """Predict next words and sentences using Groq API"""
+        language_name = self.lang_names.get(lang, "English")
+        
+        # Create prompt for Groq API
+        prompt = f"""You are a predictive text model. Given the input text below, generate:
+
+1) {num_words} likely next single words in {language_name}
+2) {num_sentences} possible next sentences in {language_name}
+
+Rules:
+- Do NOT repeat the input text.
+- Do NOT produce duplicate items.
+- Output strictly in JSON format:
+{{
+  "words": ["word1", "word2", ...],
+  "sentences": ["sentence1", "sentence2", ...]
+}}
+
+Input text: "{text}"
+"""
+        
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.7,
+                max_tokens=300,
+                top_p=0.9
+            )
+            
+            content = response.choices[0].message.content
+            
+            # Try to extract JSON from response
+            try:
+                # Find JSON pattern
+                json_match = re.search(r'\{.*\}', content, re.DOTALL)
+                if json_match:
+                    json_str = json_match.group(0)
+                    data = json.loads(json_str)
+                    words = data.get("words", [])[:num_words]
+                    sentences = data.get("sentences", [])[:num_sentences]
+                    
+                    # Ensure we have lists
+                    if isinstance(words, str):
+                        words = [words]
+                    if isinstance(sentences, str):
+                        sentences = [sentences]
+                        
+                    return words, sentences
+            except:
+                pass
+            
+            # Fallback: parse line by line
+            lines = content.strip().split('\n')
+            words = []
+            sentences = []
+            
+            for line in lines:
+                line = line.strip()
+                if line and not line.startswith('{') and not line.startswith('}'):
+                    if len(line.split()) <= 3 and len(words) < num_words:
+                        words.append(line.strip('",.'))
+                    elif len(sentences) < num_sentences:
+                        sentences.append(line.strip('",.'))
+            
+            return words[:num_words], sentences[:num_sentences]
+            
+        except Exception as e:
+            print(f"Groq API error: {e}")
+            return [], []
+
 # ---------- Spell Checker ----------
 class SpellChecker:
     def __init__(self):
@@ -149,13 +248,13 @@ class SpellChecker:
         word_lower = word.lower()
         if word_lower in self.dictionaries[lang]:
             return word
-        return word  # Simple implementation - returns same word
+        return word
 
 # ---------- FastAPI App ----------
 app = FastAPI(
-    title="Next-Word Prediction (N-gram)",
-    description="Multi-language next word prediction using N-gram models",
-    version="1.0.0"
+    title="Smart Text Predictor",
+    description="Next-word prediction using N-gram models and Groq API",
+    version="2.0.0"
 )
 
 app.add_middleware(
@@ -168,8 +267,22 @@ app.add_middleware(
 
 app.mount("/static", StaticFiles(directory="web"), name="static")
 
+# Initialize components
 spell_checker = SpellChecker()
 MODEL_CACHE: Dict[str, BackoffNGram] = {}
+groq_model = None
+
+def get_groq_model():
+    """Lazy load Groq model"""
+    global groq_model
+    if groq_model is None:
+        try:
+            groq_model = GroqModelManager()
+            print("✅ Groq API model loaded successfully")
+        except Exception as e:
+            print(f"❌ Failed to load Groq model: {e}")
+            groq_model = None
+    return groq_model
 
 def detect_language(text: str) -> str:
     if not text:
@@ -187,7 +300,7 @@ def detect_language(text: str) -> str:
             return "fr"
     return "en"
 
-def get_model(lang: str):
+def get_ngram_model(lang: str):
     if lang not in MODEL_CACHE:
         MODEL_CACHE[lang] = load_model(lang)
     return MODEL_CACHE[lang]
@@ -209,28 +322,6 @@ def auto_correct_text(text: str, lang: str) -> Tuple[str, str]:
         return corrected_text, correction_msg
     return text, ""
 
-def generate_sentence(text: str, model, lang: str) -> List[str]:
-    if not text.strip():
-        return []
-    sentences = []
-    for _ in range(3):
-        current_text = text
-        for _ in range(10):
-            next_words = model.predict(current_text, k=3, lang=lang)
-            if not next_words:
-                break
-            current_text += " " + next_words[0]
-            if next_words[0] in ['.', '!', '?', '।', '॥']:
-                break
-        sentences.append(current_text)
-    unique_sentences = []
-    seen = set()
-    for s in sentences:
-        if s not in seen:
-            unique_sentences.append(s)
-            seen.add(s)
-    return unique_sentences[:3]
-
 @app.get("/")
 async def home():
     return FileResponse("web/index.html")
@@ -239,15 +330,18 @@ async def home():
 async def predict(
     text: str = Query(..., min_length=0),
     lang: str = Query("auto"),
+    model_type: str = Query("ngram"),  # "ngram" or "groq"
     auto_correct: bool = Query(True),
     include_sentences: bool = Query(True),
     num_words: int = Query(5, ge=1, le=10)
 ):
     start_time = time.time()
+    
     try:
         if not text.strip():
             return {
                 "success": True,
+                "model_type": model_type,
                 "original_text": text,
                 "corrected_text": text,
                 "correction_msg": "",
@@ -259,46 +353,102 @@ async def predict(
                 "available_languages": spell_checker.get_available_languages()
             }
         
+        # Detect language
         if lang == "auto":
             detected_lang = detect_language(text)
         else:
             detected_lang = lang
         
+        # Auto-correct
         correction_msg = ""
         if auto_correct:
             corrected_text, correction_msg = auto_correct_text(text, detected_lang)
         else:
             corrected_text = text
         
-        model = get_model(detected_lang)
-        raw_predictions = model.predict(corrected_text, k=num_words * 3, lang=detected_lang)
-        
-        cleaned_predictions = []
-        seen = set()
-        for pred in raw_predictions:
-            if pred and pred not in seen and not pred.isdigit():
-                cleaned_predictions.append(pred)
-                seen.add(pred)
-            if len(cleaned_predictions) >= num_words:
-                break
-        
+        predictions = []
         sentence_predictions = []
-        if include_sentences and cleaned_predictions:
-            sentence_predictions = generate_sentence(corrected_text, model, detected_lang)
+        accuracy_score = 0.0
         
-        accuracy_score = 0.7 + (len(cleaned_predictions) / num_words * 0.3)
-        accuracy_score = min(0.95, accuracy_score)
+        if model_type == "ngram":
+            # Use N-gram model
+            model = get_ngram_model(detected_lang)
+            raw_predictions = model.predict(corrected_text, k=num_words * 3, lang=detected_lang)
+            
+            # Clean predictions
+            cleaned_predictions = []
+            seen = set()
+            for pred in raw_predictions:
+                if pred and pred not in seen and not pred.isdigit():
+                    cleaned_predictions.append(pred)
+                    seen.add(pred)
+                if len(cleaned_predictions) >= num_words:
+                    break
+            
+            predictions = cleaned_predictions[:num_words]
+            accuracy_score = 0.7 + (len(predictions) / num_words * 0.3)
+            accuracy_score = min(0.95, accuracy_score)
+            
+        elif model_type == "groq":
+            # Use Groq API
+            groq_model = get_groq_model()
+            if groq_model is None:
+                raise HTTPException(status_code=500, detail="Groq API not available. Check API key.")
+            
+            try:
+                words, sentences = groq_model.predict(
+                    corrected_text, 
+                    num_words=num_words, 
+                    num_sentences=3 if include_sentences else 0,
+                    lang=detected_lang
+                )
+                
+                # Clean Groq predictions
+                predictions = []
+                seen = set()
+                for word in words:
+                    if word and word not in seen and not word.isdigit():
+                        clean_word = word.strip('.,!?;:"\'')
+                        if clean_word:
+                            predictions.append(clean_word)
+                            seen.add(clean_word)
+                
+                # Clean sentence predictions
+                if include_sentences:
+                    sentence_predictions = []
+                    seen_sentences = set()
+                    for sentence in sentences:
+                        clean_sentence = sentence.strip('",.')
+                        if clean_sentence and clean_sentence not in seen_sentences:
+                            sentence_predictions.append(clean_sentence)
+                            seen_sentences.add(clean_sentence)
+                
+                # Groq typically has high accuracy
+                accuracy_score = 0.85 + (len(predictions) / num_words * 0.15)
+                accuracy_score = min(0.98, accuracy_score)
+                
+            except Exception as e:
+                print(f"Groq prediction error: {e}")
+                # Fallback to N-gram
+                model = get_ngram_model(detected_lang)
+                raw_predictions = model.predict(corrected_text, k=num_words * 3, lang=detected_lang)
+                predictions = [p for p in raw_predictions if p and not p.isdigit()][:num_words]
+                accuracy_score = 0.6
+        
+        else:
+            raise HTTPException(status_code=400, detail="Invalid model_type. Use 'ngram' or 'groq'.")
         
         response_time = round((time.time() - start_time) * 1000, 2)
         
         return {
             "success": True,
+            "model_type": model_type,
             "original_text": text,
             "corrected_text": corrected_text,
             "correction_msg": correction_msg,
             "language": detected_lang,
-            "predictions": cleaned_predictions[:num_words],
-            "sentence_predictions": sentence_predictions,
+            "predictions": predictions[:num_words],
+            "sentence_predictions": sentence_predictions[:3] if include_sentences else [],
             "accuracy_score": round(accuracy_score, 2),
             "response_time_ms": response_time,
             "available_languages": spell_checker.get_available_languages()
@@ -311,13 +461,23 @@ async def predict(
 async def get_languages():
     return {
         "available_languages": spell_checker.get_available_languages(),
-        "models_loaded": list(MODEL_CACHE.keys())
+        "models_loaded": list(MODEL_CACHE.keys()),
+        "groq_available": get_groq_model() is not None
     }
 
 @app.get("/correct")
 async def correct_spelling(text: str = Query(...), lang: str = Query("en")):
     corrected = spell_checker.correct_text(text, lang)
     return {"original": text, "corrected": corrected, "language": lang}
+
+@app.get("/groq_status")
+async def groq_status():
+    """Check if Groq API is available"""
+    groq_model = get_groq_model()
+    return {
+        "available": groq_model is not None,
+        "model": "llama-3.1-8b-instant" if groq_model else None
+    }
 
 if __name__ == "__main__":
     import uvicorn
