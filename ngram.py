@@ -46,49 +46,34 @@ class BackoffNGram:
             for token in tokens:
                 self.vocab[token] += 1
     def generate_sentence(self, text: str, max_words: int = 15, lang: str = "en") -> str:
-        """Generate a sentence continuation"""
         tokens = self._tokenize(text, lang)
-        
         if not tokens:
             return text
-        
-        generated_tokens = tokens.copy()
-        
+
+        generated = tokens[:]
+
         for _ in range(max_words):
-            # Build context from last 2 tokens
-            context = tuple(generated_tokens[-2:]) if len(generated_tokens) >= 2 else tuple()
-            
-            # Get next word prediction
-            next_word = None
-            
-            # Try trigram first
-            if len(context) == 2 and context in self.ngrams[2]:
+            context = tuple(generated[-2:]) if len(generated) >= 2 else tuple(generated)
+            candidates = None
+
+            if context in self.ngrams[2]:
                 candidates = self.ngrams[2][context]
-                if candidates:
-                    next_word = max(candidates.items(), key=lambda x: x[1])[0]
-            
-            # Fall back to bigram
-            if not next_word and len(generated_tokens) >= 1:
-                context = tuple(generated_tokens[-1:])
-                if context in self.ngrams[1]:
-                    candidates = self.ngrams[1][context]
-                    if candidates:
-                        next_word = max(candidates.items(), key=lambda x: x[1])[0]
-            
-            # Fall back to unigram
-            if not next_word and self.ngrams[0]:
-                next_word = max(self.ngrams[0].items(), key=lambda x: x[1])[0]
-            
-            if not next_word:
+            elif (context[-1:],) in self.ngrams[1]:
+                candidates = self.ngrams[1][context[-1:]]
+            elif () in self.ngrams[0]:
+                candidates = self.ngrams[0][()]
+
+            if not candidates:
                 break
-            
-            generated_tokens.append(next_word)
-            
-            # Stop at sentence boundaries
-            if next_word in ['.', '!', '?', '।', '॥']:
+
+            next_word = max(candidates, key=candidates.get)
+            generated.append(next_word)
+
+            if next_word in ['.', '!', '?', '।']:
                 break
-        
-        return ' '.join(generated_tokens)
+
+        return " ".join(generated)
+
     
     def predict(self, text: str, k: int = 5, lang: str = "en") -> List[str]:
         """Predict next words with backoff smoothing"""
