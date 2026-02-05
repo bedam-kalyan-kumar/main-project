@@ -9,6 +9,7 @@ import re
 import os
 import json
 import pickle
+import random
 from collections import Counter, defaultdict
 from groq import Groq
 from dotenv import load_dotenv
@@ -71,6 +72,84 @@ class BackoffNGram:
                         break
         
         return [p for p in predictions if not p.isdigit()][:k]
+    
+    def predict_sentences(self, text: str, num_sentences: int = 3, max_words: int = 15, lang: str = "en") -> List[str]:
+        """Generate sentence completions using N-gram model"""
+        base_tokens = self._tokenize(text, lang)
+        if not base_tokens:
+            return []
+        
+        sentences = []
+        seen_sentences = set()
+        
+        for _ in range(num_sentences * 2):  # Generate extra to ensure we get enough unique ones
+            if len(sentences) >= num_sentences:
+                break
+            
+            current_tokens = base_tokens.copy()
+            
+            for word_count in range(max_words):
+                # Get context for prediction (last 2 tokens for trigram)
+                if len(current_tokens) >= 2:
+                    context = tuple(current_tokens[-2:])
+                    if context in self.ngrams[2]:
+                        candidates = list(self.ngrams[2][context].keys())
+                        if candidates:
+                            next_word = random.choice(candidates[:10])  # Pick from top 10
+                            current_tokens.append(next_word)
+                            continue
+                
+                # Fallback to bigram
+                if len(current_tokens) >= 1:
+                    context = tuple(current_tokens[-1:])
+                    if context in self.ngrams[1]:
+                        candidates = list(self.ngrams[1][context].keys())
+                        if candidates:
+                            next_word = random.choice(candidates[:10])
+                            current_tokens.append(next_word)
+                            continue
+                
+                # Fallback to unigram
+                common_words = list(self.ngrams[0][()].keys())
+                if common_words:
+                    next_word = random.choice(common_words[:20])  # Pick from top 20 common words
+                    current_tokens.append(next_word)
+                else:
+                    break
+                
+                # Random chance to end sentence
+                if random.random() < 0.2 and word_count >= 3:
+                    # Add ending punctuation
+                    if next_word not in '.!?':
+                        current_tokens.append('.')
+                    break
+            
+            # Convert tokens back to string
+            if len(current_tokens) > len(base_tokens):
+                # Join tokens with proper spacing
+                sentence_tokens = []
+                for i, token in enumerate(current_tokens):
+                    if i > 0 and token not in '.,!?;:':
+                        sentence_tokens.append(' ')
+                    sentence_tokens.append(token)
+                
+                generated_sentence = ''.join(sentence_tokens).strip()
+                
+                # Capitalize first letter
+                if generated_sentence:
+                    generated_sentence = generated_sentence[0].upper() + generated_sentence[1:]
+                    
+                    # Ensure it ends with punctuation
+                    if generated_sentence[-1] not in '.!?':
+                        generated_sentence += '.'
+                    
+                    # Only add if unique and significantly different from input
+                    if (generated_sentence not in seen_sentences and 
+                        len(generated_sentence) > len(text) + 5):
+                        sentences.append(generated_sentence)
+                        seen_sentences.add(generated_sentence)
+        
+        return sentences[:num_sentences]
     
     def save(self, path: str):
         with open(path, 'wb') as f:
@@ -406,6 +485,8 @@ async def predict(
         
         if model_type == "ngram":
             model = get_ngram_model(detected_lang)
+            
+            # Word predictions
             raw_predictions = model.predict(corrected_text, k=num_words * 3, lang=detected_lang)
             
             # Deduplicate and clean
@@ -418,6 +499,40 @@ async def predict(
                         break
             
             predictions = predictions[:num_words]
+            
+            # ✅ ADDED: Sentence predictions for N-gram model
+            if include_sentences:
+                try:
+                    ngram_sentences = model.predict_sentences(
+                        corrected_text, 
+                        num_sentences=3, 
+                        max_words=15, 
+                        lang=detected_lang
+                    )
+                    
+                    # Clean and filter sentences
+                    seen_sentences = set()
+                    for sentence in ngram_sentences:
+                        clean_sentence = sentence.strip()
+                        if (clean_sentence and 
+                            clean_sentence not in seen_sentences and
+                            len(clean_sentence) > len(corrected_text) + 5):
+                            sentence_predictions.append(clean_sentence)
+                            seen_sentences.add(clean_sentence)
+                    
+                    sentence_predictions = sentence_predictions[:3]
+                    
+                except Exception as e:
+                    print(f"N-gram sentence prediction error: {e}")
+                    # Fallback to simple sentence generation
+                    if predictions:
+                        simple_sentences = [
+                            f"{corrected_text} {predictions[0]} {predictions[1] if len(predictions) > 1 else 'completely'}.",
+                            f"{corrected_text} and then {predictions[0]} happens.",
+                            f"{corrected_text} with {predictions[0]} and more."
+                        ]
+                        sentence_predictions = simple_sentences[:3]
+            
             accuracy_score = min(0.95, 0.7 + (len(predictions) / num_words * 0.3))
             
         elif model_type == "groq":
@@ -433,7 +548,7 @@ async def predict(
                     lang=detected_lang
                 )
                 
-                # Clean and deduplicate
+                # Clean and deduplicate words
                 seen_words = set()
                 for word in words:
                     if word and not word.isdigit() and word not in seen_words:
@@ -444,6 +559,7 @@ async def predict(
                 
                 predictions = predictions[:num_words]
                 
+                # Sentence predictions
                 if include_sentences and sentences:
                     seen_sentences = set()
                     for sentence in sentences:
@@ -511,6 +627,46 @@ async def groq_status():
         "available": groq_model is not None,
         "model": "llama-3.1-8b-instant" if groq_model else None
     }
+
+@app.get("/test_sentences")
+async def test_sentences(
+    text: str = Query("The weather is"),
+    lang: str = Query("en"),
+    model_type: str = Query("ngram")
+):
+    """Test endpoint to verify sentence generation"""
+    try:
+        if model_type == "ngram":
+            model = get_ngram_model(lang)
+            sentences = model.predict_sentences(text, num_sentences=3, max_words=15, lang=lang)
+            return {
+                "success": True,
+                "model_type": "ngram",
+                "input": text,
+                "sentences": sentences,
+                "count": len(sentences)
+            }
+        else:
+            groq_model = get_groq_model()
+            if groq_model:
+                words, sentences = groq_model.predict(text, num_words=3, num_sentences=3, lang=lang)
+                return {
+                    "success": True,
+                    "model_type": "groq",
+                    "input": text,
+                    "sentences": sentences,
+                    "count": len(sentences)
+                }
+            else:
+                return {
+                    "success": False,
+                    "error": "Groq API not available"
+                }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
 
 if __name__ == "__main__":
     import uvicorn
