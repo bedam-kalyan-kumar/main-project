@@ -1,13 +1,15 @@
 # main.py
 from fastapi import FastAPI, Query, HTTPException
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 import time
 import re
 import os
 import json
+import pickle
+from collections import Counter, defaultdict
 from groq import Groq
 from dotenv import load_dotenv
 
@@ -18,9 +20,6 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "app", "data")
 
 # ---------- N-gram Model ----------
-import pickle
-from collections import Counter, defaultdict
-
 class BackoffNGram:
     def __init__(self, n=3):
         self.n = n
@@ -33,7 +32,7 @@ class BackoffNGram:
             tokens = re.findall(r'[\u0900-\u097F\u0C00-\u0C7F\u0B80-\u0BFF\u0C80-\u0CFF\w]+|[^\w\s]', text)
         else:
             tokens = re.findall(r'\w+|[^\w\s]', text)
-        return [t for t in tokens if t.strip()]
+        return [t for t in tokens if t]
     
     def train(self, sentences: List[str], lang: str = "en"):
         for sent in sentences:
@@ -43,8 +42,7 @@ class BackoffNGram:
                     context = tuple(tokens[i:i + order - 1])
                     next_word = tokens[i + order - 1]
                     self.ngrams[order - 1][context][next_word] += 1
-            for token in tokens:
-                self.vocab[token] += 1
+            self.vocab.update(tokens)
     
     def predict(self, text: str, k: int = 5, lang: str = "en") -> List[str]:
         tokens = self._tokenize(text, lang)
@@ -53,15 +51,16 @@ class BackoffNGram:
         
         for order in range(min(self.n, len(tokens) + 1), 0, -1):
             if len(tokens) >= order - 1:
-                context = tuple(tokens[-(order - 1):]) if order > 1 else tuple()
+                context = tuple(tokens[-(order - 1):]) if order > 1 else ()
                 if context in self.ngrams[order - 1]:
-                    candidates = self.ngrams[order - 1][context].most_common(k * 2)
-                    for word, count in candidates:
+                    for word, _ in self.ngrams[order - 1][context].most_common(k * 2):
                         if word not in seen:
                             predictions.append(word)
                             seen.add(word)
                             if len(predictions) >= k:
                                 break
+            if len(predictions) >= k:
+                break
         
         if len(predictions) < k:
             for word, _ in self.vocab.most_common(k * 2):
@@ -71,13 +70,11 @@ class BackoffNGram:
                     if len(predictions) >= k:
                         break
         
-        # Remove numbers
-        cleaned = [p for p in predictions if not p.isdigit()]
-        return cleaned[:k]
+        return [p for p in predictions if not p.isdigit()][:k]
     
     def save(self, path: str):
         with open(path, 'wb') as f:
-            pickle.dump({'n': self.n, 'ngrams': self.ngrams, 'vocab': self.vocab}, f)
+            pickle.dump({'n': self.n, 'ngrams': self.ngrams, 'vocab': self.vocab}, f, protocol=pickle.HIGHEST_PROTOCOL)
     
     @classmethod
     def load(cls, path: str):
@@ -88,69 +85,59 @@ class BackoffNGram:
         model.vocab = data['vocab']
         return model
 
+# ---------- Model Management ----------
 def _model_path(lang: str) -> str:
     return os.path.join(DATA_DIR, f"ngram_{lang}.pkl")
 
 def load_model(lang: str = "en") -> BackoffNGram:
     path = _model_path(lang)
-    if not os.path.exists(path):
-        # Train model if not exists
-        corpus_path = os.path.join(DATA_DIR, f"{lang}.txt")
-        if not os.path.exists(corpus_path):
-            raise FileNotFoundError(f"Dataset not found: {corpus_path}")
-        
-        with open(corpus_path, "r", encoding="utf-8") as f:
-            lines = [line.strip() for line in f if line.strip()]
-        
-        print(f"Training {lang} model with {len(lines)} sentences...")
-        model = BackoffNGram(n=3)
-        model.train(lines, lang)
-        model.save(path)
-        print(f"✅ Trained N-gram model for {lang}")
+    if os.path.exists(path):
+        return BackoffNGram.load(path)
     
-    return BackoffNGram.load(path)
+    corpus_path = os.path.join(DATA_DIR, f"{lang}.txt")
+    if not os.path.exists(corpus_path):
+        raise FileNotFoundError(f"Dataset not found: {corpus_path}")
+    
+    with open(corpus_path, "r", encoding="utf-8") as f:
+        lines = [line.strip() for line in f if line.strip()]
+    
+    print(f"Training {lang} model with {len(lines)} sentences...")
+    model = BackoffNGram(n=3)
+    model.train(lines, lang)
+    model.save(path)
+    print(f"✅ Trained N-gram model for {lang}")
+    return model
 
 # ---------- Groq API Model ----------
 class GroqModelManager:
+    LANG_NAMES = {
+        "en": "English", "hi": "Hindi", "te": "Telugu",
+        "ta": "Tamil", "kn": "Kannada", "fr": "French"
+    }
+    
     def __init__(self):
         api_key = os.getenv("GROQ_API_KEY")
         if not api_key:
             raise ValueError("Missing GROQ_API_KEY in .env file")
-        
         self.client = Groq(api_key=api_key)
         self.model_name = "llama-3.1-8b-instant"
-        
-        # Language mapping
-        self.lang_names = {
-            "en": "English",
-            "hi": "Hindi",
-            "te": "Telugu",
-            "ta": "Tamil",
-            "kn": "Kannada",
-            "fr": "French",
-        }
     
     def predict(self, text: str, num_words: int = 5, num_sentences: int = 3, lang: str = "en") -> Tuple[List[str], List[str]]:
-        """Predict next words and sentences using Groq API"""
-        language_name = self.lang_names.get(lang, "English")
-        
-        # Create prompt for Groq API
-        prompt = f"""You are a predictive text model. Given the input text below, generate:
+        prompt = f"""Generate next words and sentences in {self.LANG_NAMES.get(lang, 'English')}.
 
-1) {num_words} likely next single words in {language_name}
-2) {num_sentences} possible next sentences in {language_name}
+Input: "{text}"
 
-Rules:
-- Do NOT repeat the input text.
-- Do NOT produce duplicate items.
-- Output strictly in JSON format:
+Output JSON format:
 {{
   "words": ["word1", "word2", ...],
   "sentences": ["sentence1", "sentence2", ...]
 }}
 
-Input text: "{text}"
-"""
+Rules:
+- Generate {num_words} next words
+- Generate {num_sentences} next sentences
+- No duplicates
+- Do not repeat input text"""
         
         try:
             response = self.client.chat.completions.create(
@@ -163,34 +150,28 @@ Input text: "{text}"
             
             content = response.choices[0].message.content
             
-            # Try to extract JSON from response
-            try:
-                # Find JSON pattern
-                json_match = re.search(r'\{.*\}', content, re.DOTALL)
-                if json_match:
-                    json_str = json_match.group(0)
-                    data = json.loads(json_str)
+            # Extract JSON
+            json_match = re.search(r'\{.*\}', content, re.DOTALL)
+            if json_match:
+                try:
+                    data = json.loads(json_match.group(0))
                     words = data.get("words", [])[:num_words]
                     sentences = data.get("sentences", [])[:num_sentences]
-                    
-                    # Ensure we have lists
                     if isinstance(words, str):
                         words = [words]
                     if isinstance(sentences, str):
                         sentences = [sentences]
-                        
                     return words, sentences
-            except:
-                pass
+                except json.JSONDecodeError:
+                    pass
             
-            # Fallback: parse line by line
-            lines = content.strip().split('\n')
+            # Fallback parsing
+            lines = [line.strip() for line in content.split('\n') if line.strip()]
             words = []
             sentences = []
             
             for line in lines:
-                line = line.strip()
-                if line and not line.startswith('{') and not line.startswith('}'):
+                if not line.startswith(('{', '}')):
                     if len(line.split()) <= 3 and len(words) < num_words:
                         words.append(line.strip('",.'))
                     elif len(sentences) < num_sentences:
@@ -209,27 +190,16 @@ class SpellChecker:
         self.load_all_dictionaries()
     
     def load_all_dictionaries(self):
-        available_langs = ['en', 'hi', 'te', 'ta', 'kn', 'fr']
-        for lang in available_langs:
+        for lang in ['en', 'hi', 'te', 'ta', 'kn', 'fr']:
             dict_path = os.path.join(DATA_DIR, f"{lang}_word_frequency.txt")
             if os.path.exists(dict_path):
-                success = self.load_dictionary(lang, dict_path)
-                if success:
-                    print(f"✅ Loaded dictionary for {lang}: {len(self.dictionaries[lang])} words")
-                else:
-                    print(f"❌ Failed to load dictionary for {lang}")
-                    self.dictionaries[lang] = {}
-            else:
-                print(f"⚠️ Dictionary file not found for {lang}: {dict_path}")
-                self.dictionaries[lang] = {}
+                self.load_dictionary(lang, dict_path)
     
     def load_dictionary(self, lang: str, path: str) -> bool:
-        words: Dict[str, int] = {}
         try:
+            words = {}
             with open(path, 'r', encoding='utf-8') as f:
-                line_count = 0
-                for line in f:
-                    line_count += 1
+                for line_num, line in enumerate(f, 1):
                     line = line.strip()
                     if not line:
                         continue
@@ -238,131 +208,121 @@ class SpellChecker:
                     if len(parts) >= 2:
                         word = parts[0].lower().strip()
                         try:
-                            freq = int(parts[1])
-                            words[word] = freq
+                            words[word] = int(parts[1])
                         except ValueError:
-                            # If frequency is not a number, use 1
                             words[word] = 1
-                    elif len(parts) == 1:
-                        # Just a word without frequency
-                        word = parts[0].lower().strip()
-                        words[word] = 1
-                    else:
-                        print(f"  Skipping line {line_count}: '{line}'")
+                    elif parts:
+                        words[parts[0].lower().strip()] = 1
             
             self.dictionaries[lang] = words
-            print(f"  Processed {line_count} lines, got {len(words)} unique words")
+            print(f"✅ Loaded {lang} dictionary: {len(words)} words")
             return True
-            
         except Exception as e:
-            print(f"Error loading dictionary {lang}: {e}")
-            import traceback
-            traceback.print_exc()
+            print(f"❌ Error loading {lang} dictionary: {e}")
+            self.dictionaries[lang] = {}
             return False
     
     def get_available_languages(self) -> List[str]:
-        return [lang for lang in self.dictionaries if self.dictionaries[lang]]
+        return [lang for lang, dict_data in self.dictionaries.items() if dict_data]
     
     def correct_text(self, text: str, lang: str = "en") -> str:
-        """Correct all words in text"""
-        print(f"\n🔧 Spell checking: '{text}' in {lang}")
-        
-        if not text or not text.strip():
+        if not text or lang not in self.dictionaries:
             return text
-        
-        if lang not in self.dictionaries or not self.dictionaries[lang]:
-            print(f"  No dictionary available for {lang}")
-            return text
-        
-        print(f"  Dictionary size: {len(self.dictionaries[lang])} words")
         
         words = text.split()
-        corrected_words = []
+        corrected = []
         
-        for i, word in enumerate(words):
-            original_word = word
-            corrected_word = self.correct_word(word, lang)
-            
-            if corrected_word != original_word:
-                print(f"  ✓ Corrected '{original_word}' → '{corrected_word}'")
-            else:
-                print(f"  ✓ '{original_word}' is correct")
-            
-            corrected_words.append(corrected_word)
+        for word in words:
+            corrected.append(self.correct_word(word, lang))
         
-        result = " ".join(corrected_words)
-        print(f"  Result: '{result}'")
-        return result
+        return " ".join(corrected)
     
     def correct_word(self, word: str, lang: str) -> str:
-        """Correct a single word based on frequency"""
         if not word or lang not in self.dictionaries:
             return word
         
-        # Clean the word - remove surrounding punctuation but keep it
-        original_word = word
-        
-        # Handle common cases
         word_lower = word.lower()
-        
-        # Direct match
         if word_lower in self.dictionaries[lang]:
             return word
         
-        # Try removing common suffixes/endings
-        if word_lower.endswith(('ing', 'ed', 's', 'ly', "'s", "n't")):
-            base_word = word_lower[:-3] if word_lower.endswith('ing') else \
-                       word_lower[:-2] if word_lower.endswith('ed') else \
-                       word_lower[:-1] if word_lower.endswith('s') else \
-                       word_lower[:-2] if word_lower.endswith('ly') else \
-                       word_lower[:-3] if word_lower.endswith("'s") else \
-                       word_lower[:-4] if word_lower.endswith("n't") else word_lower
-            
-            if base_word in self.dictionaries[lang]:
-                return word_lower if word.islower() else word.title() if word.istitle() else base_word
+        # Try suffixes
+        suffixes = [('ing', 3), ('ed', 2), ('s', 1), ('ly', 2), ("'s", 2), ("n't", 3)]
+        for suffix, length in suffixes:
+            if word_lower.endswith(suffix):
+                base = word_lower[:-length]
+                if base in self.dictionaries[lang]:
+                    if word.isupper():
+                        return base.upper()
+                    elif word.istitle():
+                        return base.title()
+                    return base
         
-        # Try difflib for fuzzy matching
+        # Fuzzy matching
         try:
             import difflib
-            
-            # Get all dictionary words
-            dict_words = list(self.dictionaries[lang].keys())
-            
-            # Find close matches
             matches = difflib.get_close_matches(
                 word_lower, 
-                dict_words, 
+                self.dictionaries[lang].keys(), 
                 n=3, 
                 cutoff=0.7
             )
-            
             if matches:
-                # Get the most frequent match
-                best_match = max(matches, key=lambda w: self.dictionaries[lang][w])
-                
-                # Preserve original capitalization
+                best = max(matches, key=lambda w: self.dictionaries[lang][w])
                 if word.isupper():
-                    return best_match.upper()
+                    return best.upper()
                 elif word.istitle():
-                    return best_match.title()
-                else:
-                    return best_match
-                    
+                    return best.title()
+                return best
         except ImportError:
-            print("difflib not available")
-        except Exception as e:
-            print(f"Error in fuzzy matching: {e}")
+            pass
+        except Exception:
+            pass
         
-        # If no correction found, return original word
         return word
+
+# ---------- Utility Functions ----------
+def detect_language(text: str) -> str:
+    if not text:
+        return "en"
     
-    def is_correct(self, word: str, lang: str) -> bool:
-        """Check if a word is spelled correctly"""
-        if not word or lang not in self.dictionaries:
-            return True
-        
-        word_lower = word.lower()
-        return word_lower in self.dictionaries[lang]
+    # Unicode ranges for Indian languages
+    ranges = [
+        ('hi', '\u0900', '\u097F'),
+        ('te', '\u0C00', '\u0C7F'),
+        ('ta', '\u0B80', '\u0BFF'),
+        ('kn', '\u0C80', '\u0CFF')
+    ]
+    
+    for char in text[:100]:  # Check first 100 chars for efficiency
+        for lang, start, end in ranges:
+            if start <= char <= end:
+                return lang
+        if char in 'éèêëàâçîïôûùü':
+            return "fr"
+    
+    return "en"
+
+def auto_correct_text(text: str, lang: str, spell_checker: SpellChecker) -> Tuple[str, str]:
+    if not text or lang not in spell_checker.get_available_languages():
+        return text, ""
+    
+    original = text
+    corrected = spell_checker.correct_text(text, lang)
+    
+    if corrected == original:
+        return corrected, ""
+    
+    # Generate correction message
+    orig_words = original.split()
+    corr_words = corrected.split()
+    corrections = []
+    
+    for orig, corr in zip(orig_words, corr_words):
+        if orig != corr:
+            corrections.append(f"'{orig}'→'{corr}'")
+    
+    msg = "Auto-corrected: " + ", ".join(corrections) if corrections else ""
+    return corrected, msg
 
 # ---------- FastAPI App ----------
 app = FastAPI(
@@ -379,93 +339,37 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.mount("/static", StaticFiles(directory="web"), name="static")
-
 # Initialize components
 spell_checker = SpellChecker()
 MODEL_CACHE: Dict[str, BackoffNGram] = {}
-groq_model = None
+groq_model_instance = None
 
 def get_groq_model():
-    """Lazy load Groq model"""
-    global groq_model
-    if groq_model is None:
+    global groq_model_instance
+    if groq_model_instance is None:
         try:
-            groq_model = GroqModelManager()
+            groq_model_instance = GroqModelManager()
             print("✅ Groq API model loaded successfully")
         except Exception as e:
             print(f"❌ Failed to load Groq model: {e}")
-            groq_model = None
-    return groq_model
-
-def detect_language(text: str) -> str:
-    if not text:
-        return "en"
-    for char in text:
-        if '\u0900' <= char <= '\u097F':
-            return "hi"
-        elif '\u0C00' <= char <= '\u0C7F':
-            return "te"
-        elif '\u0B80' <= char <= '\u0BFF':
-            return "ta"
-        elif '\u0C80' <= char <= '\u0CFF':
-            return "kn"
-        elif char in 'éèêëàâçîïôûùü':
-            return "fr"
-    return "en"
+            groq_model_instance = None
+    return groq_model_instance
 
 def get_ngram_model(lang: str):
     if lang not in MODEL_CACHE:
         MODEL_CACHE[lang] = load_model(lang)
     return MODEL_CACHE[lang]
 
-def auto_correct_text(text: str, lang: str) -> Tuple[str, str]:
-    """Auto-correct the text and return correction message"""
-    if not text or not text.strip():
-        return text, ""
-    
-    print(f"\n🔄 Auto-correcting text: '{text}'")
-    print(f"   Language: {lang}")
-    print(f"   Spell checker available languages: {spell_checker.get_available_languages()}")
-    
-    if lang not in spell_checker.get_available_languages():
-        print(f"   Language {lang} not available for spell checking")
-        return text, ""
-    
-    # Get original text
-    original_text = text
-    
-    # Correct the entire text
-    corrected_text = spell_checker.correct_text(text, lang)
-    
-    # Generate correction message
-    corrections = []
-    if corrected_text != original_text:
-        original_words = original_text.split()
-        corrected_words = corrected_text.split()
-        
-        for orig, corr in zip(original_words, corrected_words):
-            if orig != corr:
-                corrections.append(f"'{orig}'→'{corr} '")
-    
-    if corrections:
-        correction_msg = "Auto-corrected: " + ", ".join(corrections)
-        print(f"   Correction message: {correction_msg}")
-    else:
-        correction_msg = ""
-        print(f"   No corrections needed")
-    
-    return corrected_text, correction_msg
-
+# ---------- API Endpoints ----------
 @app.get("/")
 async def home():
     return FileResponse("web/index.html")
 
 @app.get("/predict")
 async def predict(
-    text: str = Query(..., min_length=0),
+    text: str = Query("", min_length=0),
     lang: str = Query("auto"),
-    model_type: str = Query("ngram"),  # "ngram" or "groq"
+    model_type: str = Query("ngram"),
     auto_correct: bool = Query(True),
     include_sentences: bool = Query(True),
     num_words: int = Query(5, ge=1, le=10)
@@ -489,68 +393,58 @@ async def predict(
             }
         
         # Detect language
-        if lang == "auto":
-            detected_lang = detect_language(text)
-        else:
-            detected_lang = lang
+        detected_lang = detect_language(text) if lang == "auto" else lang
         
         # Auto-correct
+        corrected_text = text
         correction_msg = ""
         if auto_correct:
-            corrected_text, correction_msg = auto_correct_text(text, detected_lang)
-        else:
-            corrected_text = text
+            corrected_text, correction_msg = auto_correct_text(text, detected_lang, spell_checker)
         
         predictions = []
         sentence_predictions = []
-        accuracy_score = 0.0
         
         if model_type == "ngram":
-            # Use N-gram model
             model = get_ngram_model(detected_lang)
             raw_predictions = model.predict(corrected_text, k=num_words * 3, lang=detected_lang)
             
-            # Clean predictions
-            cleaned_predictions = []
+            # Deduplicate and clean
             seen = set()
             for pred in raw_predictions:
-                if pred and pred not in seen and not pred.isdigit():
-                    cleaned_predictions.append(pred)
+                if pred and not pred.isdigit() and pred not in seen:
+                    predictions.append(pred)
                     seen.add(pred)
-                if len(cleaned_predictions) >= num_words:
-                    break
+                    if len(predictions) >= num_words:
+                        break
             
-            predictions = cleaned_predictions[:num_words]
-            accuracy_score = 0.7 + (len(predictions) / num_words * 0.3)
-            accuracy_score = min(0.95, accuracy_score)
+            predictions = predictions[:num_words]
+            accuracy_score = min(0.95, 0.7 + (len(predictions) / num_words * 0.3))
             
         elif model_type == "groq":
-            # Use Groq API
             groq_model = get_groq_model()
-            if groq_model is None:
-                raise HTTPException(status_code=500, detail="Groq API not available. Check API key.")
+            if not groq_model:
+                raise HTTPException(status_code=500, detail="Groq API not available")
             
             try:
                 words, sentences = groq_model.predict(
                     corrected_text, 
-                    num_words=num_words, 
+                    num_words=num_words,
                     num_sentences=3 if include_sentences else 0,
                     lang=detected_lang
                 )
                 
-                # Clean Groq predictions
-                predictions = []
-                seen = set()
+                # Clean and deduplicate
+                seen_words = set()
                 for word in words:
-                    if word and word not in seen and not word.isdigit():
+                    if word and not word.isdigit() and word not in seen_words:
                         clean_word = word.strip('.,!?;:"\'')
                         if clean_word:
                             predictions.append(clean_word)
-                            seen.add(clean_word)
+                            seen_words.add(clean_word)
                 
-                # Clean sentence predictions
-                if include_sentences:
-                    sentence_predictions = []
+                predictions = predictions[:num_words]
+                
+                if include_sentences and sentences:
                     seen_sentences = set()
                     for sentence in sentences:
                         clean_sentence = sentence.strip('",.')
@@ -558,9 +452,7 @@ async def predict(
                             sentence_predictions.append(clean_sentence)
                             seen_sentences.add(clean_sentence)
                 
-                # Groq typically has high accuracy
-                accuracy_score = 0.85 + (len(predictions) / num_words * 0.15)
-                accuracy_score = min(0.98, accuracy_score)
+                accuracy_score = min(0.98, 0.85 + (len(predictions) / num_words * 0.15))
                 
             except Exception as e:
                 print(f"Groq prediction error: {e}")
@@ -571,7 +463,7 @@ async def predict(
                 accuracy_score = 0.6
         
         else:
-            raise HTTPException(status_code=400, detail="Invalid model_type. Use 'ngram' or 'groq'.")
+            raise HTTPException(status_code=400, detail="Invalid model_type")
         
         response_time = round((time.time() - start_time) * 1000, 2)
         
@@ -582,7 +474,7 @@ async def predict(
             "corrected_text": corrected_text,
             "correction_msg": correction_msg,
             "language": detected_lang,
-            "predictions": predictions[:num_words],
+            "predictions": predictions,
             "sentence_predictions": sentence_predictions[:3] if include_sentences else [],
             "accuracy_score": round(accuracy_score, 2),
             "response_time_ms": response_time,
@@ -601,13 +493,19 @@ async def get_languages():
     }
 
 @app.get("/correct")
-async def correct_spelling(text: str = Query(...), lang: str = Query("en")):
+async def correct_spelling(
+    text: str = Query(...),
+    lang: str = Query("en")
+):
     corrected = spell_checker.correct_text(text, lang)
-    return {"original": text, "corrected": corrected, "language": lang}
+    return {
+        "original": text,
+        "corrected": corrected,
+        "language": lang
+    }
 
 @app.get("/groq_status")
 async def groq_status():
-    """Check if Groq API is available"""
     groq_model = get_groq_model()
     return {
         "available": groq_model is not None,
