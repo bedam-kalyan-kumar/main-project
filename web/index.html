@@ -5,19 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Text Predictor</title>
     <style>
-        :root {
-            --primary-color: #4f46e5;
-            --primary-hover: #4338ca;
-            --success-color: #10b981;
-            --danger-color: #ef4444;
-            --groq-color: #8b5cf6;
-            --groq-hover: #7c3aed;
-            --background-light: #f8fafc;
-            --border-color: #e5e7eb;
-            --text-secondary: #6b7280;
-            --shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-
         * {
             margin: 0;
             padding: 0;
@@ -36,14 +23,15 @@
             margin: 0 auto;
             background: white;
             border-radius: 16px;
-            box-shadow: var(--shadow);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             overflow: hidden;
         }
 
         header {
-            background: linear-gradient(to right, var(--primary-color), var(--groq-hover));
+            background: linear-gradient(to right, #4f46e5, #7c3aed);
             color: white;
             padding: 25px 30px;
+            position: relative;
         }
 
         h1 {
@@ -67,39 +55,48 @@
             margin-left: 10px;
         }
 
+        .model-ngram {
+            background: #10b981;
+        }
+
+        .model-groq {
+            background: #8b5cf6;
+        }
+
         .main-content {
             padding: 30px;
         }
 
         .input-section {
             margin-bottom: 30px;
+            position: relative;
         }
 
         textarea {
             width: 100%;
             min-height: 140px;
             padding: 18px;
-            border: 2px solid var(--border-color);
+            border: 2px solid #e5e7eb;
             border-radius: 12px;
             font-size: 18px;
             resize: vertical;
             transition: all 0.3s;
             font-family: inherit;
             line-height: 1.5;
-            display: block;
         }
 
         textarea:focus {
             outline: none;
-            border-color: var(--primary-color);
+            border-color: #4f46e5;
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
         }
 
-        .input-actions {
+        .input-buttons {
+            position: absolute;
+            right: 15px;
+            bottom: 15px;
             display: flex;
-            justify-content: flex-end;
             gap: 10px;
-            margin-top: 10px;
         }
 
         .btn {
@@ -110,9 +107,18 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
-            display: inline-flex;
+            display: flex;
             align-items: center;
             gap: 6px;
+        }
+
+        .btn-primary {
+            background: #4f46e5;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #4338ca;
         }
 
         .btn-secondary {
@@ -125,7 +131,7 @@
         }
 
         .btn-danger {
-            background: var(--danger-color);
+            background: #ef4444;
             color: white;
         }
 
@@ -133,14 +139,31 @@
             background: #dc2626;
         }
 
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-groq {
+            background: #8b5cf6;
+            color: white;
+        }
+
+        .btn-groq:hover {
+            background: #7c3aed;
+        }
+
         .key-hint {
-            color: var(--text-secondary);
+            color: #6b7280;
             font-size: 13px;
             margin-top: 5px;
             display: flex;
             align-items: center;
             gap: 8px;
-            flex-wrap: wrap;
         }
 
         .controls {
@@ -180,7 +203,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: var(--success-color);
+            background: #10b981;
             transition: .4s;
             border-radius: 34px;
         }
@@ -198,16 +221,29 @@
         }
 
         input:checked + .toggle-slider {
-            background: var(--groq-color);
+            background: #8b5cf6;
         }
 
         input:checked + .toggle-slider:before {
             transform: translateX(30px);
         }
 
+        .toggle-label {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .toggle-label-left {
+            color: #10b981;
+        }
+
+        .toggle-label-right {
+            color: #8b5cf6;
+        }
+
         select, .checkbox-group {
             padding: 10px 16px;
-            border: 2px solid var(--border-color);
+            border: 2px solid #e5e7eb;
             border-radius: 8px;
             font-size: 15px;
             background: white;
@@ -221,8 +257,14 @@
             user-select: none;
         }
 
+        .checkbox-group input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
         .status-bar {
-            background: var(--background-light);
+            background: #f8fafc;
             padding: 15px 20px;
             border-radius: 10px;
             margin: 20px 0;
@@ -230,23 +272,22 @@
             justify-content: space-between;
             align-items: center;
             font-size: 14px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .language-badge, .accuracy-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-weight: 500;
-            color: white;
         }
 
         .language-badge {
-            background: var(--primary-color);
+            background: #4f46e5;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 500;
         }
 
         .accuracy-badge {
-            background: var(--success-color);
+            background: #10b981;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 500;
         }
 
         .correction-msg {
@@ -275,6 +316,13 @@
             font-size: 1.2rem;
         }
 
+        .model-indicator {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
         .predictions-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -282,8 +330,8 @@
         }
 
         .prediction-item {
-            background: var(--background-light);
-            border: 2px solid var(--border-color);
+            background: #f8fafc;
+            border: 2px solid #e5e7eb;
             border-radius: 10px;
             padding: 16px;
             cursor: pointer;
@@ -294,11 +342,27 @@
         }
 
         .prediction-item:hover {
-            background: var(--primary-color);
+            background: #4f46e5;
             color: white;
-            border-color: var(--primary-color);
+            border-color: #4f46e5;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .confidence-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #e5e7eb;
+            color: #6b7280;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+
+        .prediction-item:hover .confidence-badge {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
         }
 
         .sentence-item {
@@ -320,7 +384,7 @@
         .loading {
             text-align: center;
             padding: 20px;
-            color: var(--text-secondary);
+            color: #6b7280;
             grid-column: 1 / -1;
         }
 
@@ -330,6 +394,38 @@
             border-radius: 8px;
             display: none;
             font-size: 14px;
+        }
+
+        .speech-listening {
+            background: #dcfce7;
+            color: #166534;
+            border-left: 4px solid #10b981;
+        }
+
+        .speech-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 4px solid #ef4444;
+        }
+
+        .api-status {
+            margin-top: 10px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .api-online {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .api-offline {
+            background: #fef3c7;
+            color: #92400e;
         }
 
         @media (max-width: 768px) {
@@ -346,10 +442,10 @@
                 align-items: stretch;
             }
             
-            .status-bar {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 5px;
+            .input-buttons {
+                position: static;
+                margin-top: 10px;
+                justify-content: flex-end;
             }
         }
     </style>
@@ -360,7 +456,10 @@
             <h1>Smart Text Predictor</h1>
             <div class="subtitle">
                 Multi-language next word prediction 
-                <span id="modelBadge" class="model-badge">N-gram</span>
+                <span id="modelBadge" class="model-badge model-ngram">N-gram</span>
+            </div>
+            <div id="apiStatus" class="api-status api-online" style="display: none;">
+                <span>✅ Groq API Connected</span>
             </div>
         </header>
         
@@ -372,9 +471,9 @@
                     autofocus
                 ></textarea>
                 
-                <div class="input-actions">
+                <div class="input-buttons">
                     <button class="btn btn-secondary" onclick="predictor.startVoiceInput()" title="Voice Input">
-                        🎤 Voice Input
+                        🎤
                     </button>
                     <button class="btn btn-danger" onclick="predictor.clearText()" title="Clear Text">
                         ✕ Clear
@@ -382,23 +481,23 @@
                 </div>
                 
                 <div class="key-hint">
-                    <span>💡 Tip: Click on predictions to insert them</span>
+                    <span>💡 Tip: Click on any word below to add it to the text</span>
                     <span>• Press Space for auto-correction</span>
-                    <span>• Press Escape to clear text</span>
                 </div>
                 
                 <div class="correction-msg" id="correctionMessage"></div>
+                
                 <div id="speechStatus" class="speech-status"></div>
             </div>
             
             <div class="controls">
                 <div class="model-toggle">
-                    <span>N-gram</span>
+                    <span class="toggle-label toggle-label-left">N-gram</span>
                     <label class="toggle-switch">
                         <input type="checkbox" id="modelToggle">
                         <span class="toggle-slider"></span>
                     </label>
-                    <span>Groq AI</span>
+                    <span class="toggle-label toggle-label-right">Groq AI</span>
                 </div>
                 
                 <select id="languageSelect">
@@ -428,15 +527,24 @@
             </div>
             
             <div class="status-bar">
-                <div>Status: <span id="status">Ready</span></div>
-                <div>Language: <span id="detectedLang" class="language-badge">-</span></div>
-                <div>Accuracy: <span id="accuracyScore" class="accuracy-badge">--%</span></div>
-                <div>Time: <span id="responseTime">-</span>ms</div>
+                <div>
+                    Status: <span id="status">Ready</span>
+                </div>
+                <div>
+                    Language: <span id="detectedLang" class="language-badge">-</span>
+                </div>
+                <div>
+                    Accuracy: <span id="accuracyScore" class="accuracy-badge">--%</span>
+                </div>
+                <div>
+                    Time: <span id="responseTime">-</span>ms
+                </div>
             </div>
             
             <div class="predictions-section">
                 <div class="section-header">
                     <h3>Next Word Predictions:</h3>
+                    <span id="wordModelIndicator" class="model-indicator" style="background: #10b981; color: white;">N-gram</span>
                 </div>
                 <div id="predictionsContainer" class="predictions-grid">
                     <div class="loading">Start typing to see predictions...</div>
@@ -446,6 +554,7 @@
             <div class="predictions-section" id="sentenceSection">
                 <div class="section-header">
                     <h3>Sentence Completions:</h3>
+                    <span id="sentenceModelIndicator" class="model-indicator" style="background: #10b981; color: white;">N-gram</span>
                 </div>
                 <div id="sentenceContainer" class="predictions-grid">
                     <div class="loading">Sentence predictions will appear here...</div>
@@ -457,71 +566,83 @@
     <script>
         class TextPredictor {
             constructor() {
-                this.elements = {};
-                this.setupElements();
-                this.setupState();
-                this.initSpeechRecognition();
-                this.setupEventListeners();
-                this.checkGroqStatus();
-            }
-            
-            setupElements() {
-                const ids = ['inputText', 'predictionsContainer', 'sentenceContainer', 
-                           'sentenceSection', 'status', 'detectedLang', 'responseTime',
-                           'accuracyScore', 'correctionMessage', 'speechStatus',
-                           'modelBadge', 'languageSelect', 'autoCorrect', 
-                           'autoPredict', 'includeSentences', 'modelToggle'];
+                this.input = document.getElementById('inputText');
+                this.predictionsContainer = document.getElementById('predictionsContainer');
+                this.sentenceContainer = document.getElementById('sentenceContainer');
+                this.sentenceSection = document.getElementById('sentenceSection');
+                this.status = document.getElementById('status');
+                this.detectedLang = document.getElementById('detectedLang');
+                this.responseTime = document.getElementById('responseTime');
+                this.accuracyScore = document.getElementById('accuracyScore');
+                this.correctionMessage = document.getElementById('correctionMessage');
+                this.speechStatus = document.getElementById('speechStatus');
+                this.modelBadge = document.getElementById('modelBadge');
+                this.apiStatus = document.getElementById('apiStatus');
+                this.wordModelIndicator = document.getElementById('wordModelIndicator');
+                this.sentenceModelIndicator = document.getElementById('sentenceModelIndicator');
                 
-                ids.forEach(id => {
-                    this.elements[id] = document.getElementById(id);
-                });
-            }
-            
-            setupState() {
+                this.languageSelect = document.getElementById('languageSelect');
+                this.autoCorrect = document.getElementById('autoCorrect');
+                this.autoPredict = document.getElementById('autoPredict');
+                this.includeSentences = document.getElementById('includeSentences');
+                this.modelToggle = document.getElementById('modelToggle');
+                
                 this.debounceTimer = null;
                 this.lastInput = '';
                 this.isListening = false;
                 this.recognition = null;
-                this.currentModel = 'ngram';
+                this.currentModel = 'ngram'; // 'ngram' or 'groq'
                 this.groqAvailable = false;
+                
+                this.setupEventListeners();
+                this.initSpeechRecognition();
+                this.checkGroqStatus();
             }
             
             setupEventListeners() {
-                this.elements.inputText.addEventListener('input', () => this.handleInput());
-                this.elements.inputText.addEventListener('keydown', (e) => this.handleKeyDown(e));
-                this.elements.modelToggle.addEventListener('change', () => this.handleModelToggle());
+                // Input events
+                this.input.addEventListener('input', () => this.handleInput());
+                this.input.addEventListener('keydown', (e) => this.handleKeyDown(e));
                 
-                ['languageSelect', 'autoCorrect', 'autoPredict', 'includeSentences'].forEach(id => {
-                    this.elements[id].addEventListener('change', () => this.handleControlChange(id));
+                // Model toggle
+                this.modelToggle.addEventListener('change', () => {
+                    this.currentModel = this.modelToggle.checked ? 'groq' : 'ngram';
+                    this.updateModelUI();
+                    if (this.autoPredict.checked) {
+                        this.predict();
+                    }
+                });
+                
+                // Control events
+                this.languageSelect.addEventListener('change', () => this.predict());
+                this.autoCorrect.addEventListener('change', () => this.predict());
+                this.autoPredict.addEventListener('change', () => {
+                    if (this.autoPredict.checked) this.predict();
+                });
+                this.includeSentences.addEventListener('change', () => {
+                    this.sentenceSection.style.display = this.includeSentences.checked ? 'block' : 'none';
+                    if (this.includeSentences.checked) this.predict();
                 });
             }
             
-            handleModelToggle() {
-                this.currentModel = this.elements.modelToggle.checked ? 'groq' : 'ngram';
-                this.updateModelUI();
-                if (this.elements.autoPredict.checked) {
-                    this.predict();
-                }
-            }
-            
-            handleControlChange(controlId) {
-                if (controlId === 'includeSentences') {
-                    this.elements.sentenceSection.style.display = 
-                        this.elements.includeSentences.checked ? 'block' : 'none';
-                }
-                
-                if (this.elements.autoPredict.checked) {
-                    this.predict();
-                }
-            }
-            
             updateModelUI() {
-                const isGroq = this.currentModel === 'groq';
-                const modelName = isGroq ? 'Groq AI' : 'N-gram';
-                const modelColor = isGroq ? '#8b5cf6' : '#10b981';
-                
-                this.elements.modelBadge.textContent = modelName;
-                this.elements.modelBadge.style.background = modelColor;
+                if (this.currentModel === 'groq') {
+                    this.modelBadge.textContent = 'Groq AI';
+                    this.modelBadge.className = 'model-badge model-groq';
+                    this.wordModelIndicator.textContent = 'Groq AI';
+                    this.wordModelIndicator.style.background = '#8b5cf6';
+                    this.sentenceModelIndicator.textContent = 'Groq AI';
+                    this.sentenceModelIndicator.style.background = '#8b5cf6';
+                    this.apiStatus.style.display = this.groqAvailable ? 'flex' : 'none';
+                } else {
+                    this.modelBadge.textContent = 'N-gram';
+                    this.modelBadge.className = 'model-badge model-ngram';
+                    this.wordModelIndicator.textContent = 'N-gram';
+                    this.wordModelIndicator.style.background = '#10b981';
+                    this.sentenceModelIndicator.textContent = 'N-gram';
+                    this.sentenceModelIndicator.style.background = '#10b981';
+                    this.apiStatus.style.display = 'none';
+                }
             }
             
             async checkGroqStatus() {
@@ -529,9 +650,10 @@
                     const response = await fetch('/groq_status');
                     const data = await response.json();
                     this.groqAvailable = data.available;
+                    this.updateModelUI();
                     
                     if (!this.groqAvailable && this.currentModel === 'groq') {
-                        this.elements.modelToggle.checked = false;
+                        this.modelToggle.checked = false;
                         this.currentModel = 'ngram';
                         this.updateModelUI();
                         this.showNotification('⚠️ Groq API not available. Switching to N-gram mode.');
@@ -554,29 +676,12 @@
                     border-radius: 8px;
                     z-index: 1000;
                     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                    animation: slideIn 0.3s ease;
                 `;
-                
                 document.body.appendChild(notification);
                 
                 setTimeout(() => {
-                    notification.style.animation = 'slideOut 0.3s ease';
-                    setTimeout(() => notification.remove(), 300);
+                    notification.remove();
                 }, 3000);
-                
-                // Add CSS animations
-                const style = document.createElement('style');
-                style.textContent = `
-                    @keyframes slideIn {
-                        from { transform: translateX(100%); opacity: 0; }
-                        to { transform: translateX(0); opacity: 1; }
-                    }
-                    @keyframes slideOut {
-                        from { transform: translateX(0); opacity: 1; }
-                        to { transform: translateX(100%); opacity: 0; }
-                    }
-                `;
-                document.head.appendChild(style);
             }
             
             initSpeechRecognition() {
@@ -588,7 +693,7 @@
                     
                     this.recognition.onstart = () => {
                         this.isListening = true;
-                        this.showSpeechStatus('🎤 Listening... Speak now!', 'listening');
+                        this.showSpeechStatus('Listening... Speak now!', 'listening');
                     };
                     
                     this.recognition.onresult = (event) => {
@@ -597,29 +702,27 @@
                     };
                     
                     this.recognition.onerror = (event) => {
-                        this.showSpeechStatus(`❌ Speech recognition error: ${event.error}`, 'error');
+                        this.showSpeechStatus(`Speech recognition error: ${event.error}`, 'error');
                         this.isListening = false;
                     };
                     
                     this.recognition.onend = () => {
                         this.isListening = false;
-                        this.elements.speechStatus.style.display = 'none';
+                        this.speechStatus.style.display = 'none';
                     };
                 }
             }
             
             showSpeechStatus(message, type) {
-                this.elements.speechStatus.textContent = message;
-                this.elements.speechStatus.className = 'speech-status';
-                this.elements.speechStatus.style.display = 'block';
-                this.elements.speechStatus.style.background = type === 'error' ? '#fee2e2' : '#dcfce7';
-                this.elements.speechStatus.style.color = type === 'error' ? '#991b1b' : '#166534';
-                this.elements.speechStatus.style.borderLeft = `4px solid ${type === 'error' ? '#ef4444' : '#10b981'}`;
+                this.speechStatus.textContent = message;
+                this.speechStatus.className = 'speech-status';
+                this.speechStatus.classList.add(`speech-${type}`);
+                this.speechStatus.style.display = 'block';
             }
             
             startVoiceInput() {
                 if (!this.recognition) {
-                    this.showSpeechStatus('❌ Speech recognition not supported in your browser', 'error');
+                    this.showSpeechStatus('Speech recognition not supported in your browser', 'error');
                     return;
                 }
                 
@@ -628,69 +731,84 @@
                     return;
                 }
                 
+                // Set language based on selection
                 const langMap = {
                     'en': 'en-US',
                     'hi': 'hi-IN',
                     'fr': 'fr-FR'
                 };
                 
-                const selectedLang = this.elements.languageSelect.value === 'auto' ? 'en' : this.elements.languageSelect.value;
+                const selectedLang = this.languageSelect.value === 'auto' ? 'en' : this.languageSelect.value;
                 this.recognition.lang = langMap[selectedLang] || 'en-US';
                 
                 try {
                     this.recognition.start();
                 } catch (error) {
-                    this.showSpeechStatus(`❌ Error: ${error}`, 'error');
+                    this.showSpeechStatus(`Error starting speech recognition: ${error}`, 'error');
                 }
             }
             
             insertVoiceText(text) {
-                const input = this.elements.inputText;
-                const cursorPos = input.selectionStart;
-                const beforeCursor = input.value.substring(0, cursorPos);
-                const afterCursor = input.value.substring(cursorPos);
+                const currentText = this.input.value;
+                const cursorPos = this.input.selectionStart;
                 
+                const beforeCursor = currentText.substring(0, cursorPos);
+                const afterCursor = currentText.substring(cursorPos);
+                
+                // Add space before if needed
                 let insertText = text;
                 if (beforeCursor && !beforeCursor.endsWith(' ') && beforeCursor.length > 0) {
                     insertText = ' ' + text;
                 }
                 
-                input.value = beforeCursor + insertText + afterCursor;
-                input.selectionStart = input.selectionEnd = cursorPos + insertText.length;
+                this.input.value = beforeCursor + insertText + afterCursor;
                 
-                this.lastInput = input.value;
+                // Move cursor after inserted text
+                const newCursorPos = cursorPos + insertText.length;
+                this.input.selectionStart = newCursorPos;
+                this.input.selectionEnd = newCursorPos;
+                
+                // Trigger prediction
+                this.lastInput = this.input.value;
                 this.predict();
-                input.focus();
+                
+                // Focus back on input
+                this.input.focus();
             }
             
             handleKeyDown(e) {
-                if (e.key === ' ' && this.elements.autoCorrect.checked) {
+                // Auto-correct on Space
+                if (e.key === ' ' && this.autoCorrect.checked) {
                     this.autoCorrectText();
-                } else if (e.key === 'Escape') {
+                }
+                
+                // Clear on Escape
+                if (e.key === 'Escape') {
                     this.clearText();
                 }
             }
             
             clearText() {
-                this.elements.inputText.value = '';
+                this.input.value = '';
                 this.clearPredictions();
-                this.elements.inputText.focus();
+                this.input.focus();
             }
             
             async autoCorrectText() {
-                const text = this.elements.inputText.value;
+                const text = this.input.value;
                 if (!text.trim()) return;
                 
-                const lang = this.elements.languageSelect.value === 'auto' ? 'en' : this.elements.languageSelect.value;
+                const lang = this.languageSelect.value === 'auto' ? 'en' : this.languageSelect.value;
                 
                 try {
                     this.setStatus('Correcting...');
+                    
                     const response = await fetch(`/correct?text=${encodeURIComponent(text)}&lang=${lang}`);
                     const data = await response.json();
                     
                     if (data.corrected !== text) {
-                        this.elements.inputText.value = data.corrected;
-                        this.showCorrectionMessage(`Auto-corrected: "${data.original}" → "${data.corrected}"`);
+                        this.input.value = data.corrected;
+                        this.showCorrectionMessage(`Corrected: "${data.original}" → "${data.corrected}"`);
                         this.predict();
                     }
                 } catch (error) {
@@ -700,20 +818,22 @@
             }
             
             showCorrectionMessage(message) {
-                this.elements.correctionMessage.textContent = message;
-                this.elements.correctionMessage.style.display = 'block';
+                this.correctionMessage.textContent = message;
+                this.correctionMessage.style.display = 'block';
                 
+                // Auto-hide after 5 seconds
                 setTimeout(() => {
-                    this.elements.correctionMessage.style.display = 'none';
+                    this.correctionMessage.style.display = 'none';
                 }, 5000);
             }
             
             handleInput() {
-                if (!this.elements.autoPredict.checked) return;
+                if (!this.autoPredict.checked) return;
                 
+                // Debounce predictions
                 clearTimeout(this.debounceTimer);
                 
-                const currentText = this.elements.inputText.value;
+                const currentText = this.input.value;
                 if (currentText === this.lastInput) return;
                 
                 this.lastInput = currentText;
@@ -727,7 +847,7 @@
             }
             
             async predict() {
-                const text = this.elements.inputText.value.trim();
+                const text = this.input.value.trim();
                 if (!text) {
                     this.clearPredictions();
                     return;
@@ -738,10 +858,10 @@
                     
                     const params = new URLSearchParams({
                         text: text,
-                        lang: this.elements.languageSelect.value,
+                        lang: this.languageSelect.value,
                         model_type: this.currentModel,
-                        auto_correct: this.elements.autoCorrect.checked,
-                        include_sentences: this.elements.includeSentences.checked,
+                        auto_correct: this.autoCorrect.checked,
+                        include_sentences: this.includeSentences.checked,
                         num_words: 8
                     });
                     
@@ -758,7 +878,7 @@
                 } catch (error) {
                     console.error('Prediction error:', error);
                     this.setStatus('Error getting predictions');
-                    this.elements.predictionsContainer.innerHTML = `
+                    this.predictionsContainer.innerHTML = `
                         <div class="loading">
                             Error loading predictions. Please try again.
                         </div>
@@ -769,17 +889,22 @@
             displayPredictions(data) {
                 const predictions = data.predictions || [];
                 const accuracy = data.accuracy_score || 0;
-                const accuracyPercent = Math.round(accuracy * 100);
                 
                 // Update accuracy badge
-                this.elements.accuracyScore.textContent = `${accuracyPercent}%`;
-                this.elements.accuracyScore.style.background = 
-                    accuracyPercent >= 80 ? '#10b981' : 
-                    accuracyPercent >= 60 ? '#f59e0b' : '#ef4444';
+                const accuracyPercent = Math.round(accuracy * 100);
+                this.accuracyScore.textContent = `${accuracyPercent}%`;
                 
-                // Display predictions
+                // Color based on accuracy
+                if (accuracyPercent >= 80) {
+                    this.accuracyScore.style.background = '#10b981';
+                } else if (accuracyPercent >= 60) {
+                    this.accuracyScore.style.background = '#f59e0b';
+                } else {
+                    this.accuracyScore.style.background = '#ef4444';
+                }
+                
                 if (predictions.length === 0) {
-                    this.elements.predictionsContainer.innerHTML = `
+                    this.predictionsContainer.innerHTML = `
                         <div class="loading">
                             No predictions available. Try typing more text.
                         </div>
@@ -787,39 +912,42 @@
                     return;
                 }
                 
-                const html = predictions
-                    .filter(pred => pred && pred.trim())
-                    .map((pred, index) => {
-                        const cleanPred = pred.replace(/\d+/g, '').trim();
+                let html = '';
+                predictions.forEach((prediction, index) => {
+                    // Clean the prediction
+                    const cleanPrediction = prediction.replace(/\d+/g, '').trim();
+                    
+                    if (cleanPrediction) {
+                        // Calculate confidence score based on position
                         const confidence = Math.min(95, 85 - (index * 5));
                         
-                        return `
+                        html += `
                             <div class="prediction-item" 
-                                 onclick="predictor.insertWord('${cleanPred.replace(/'/g, "\\'")}')"
+                                 onclick="predictor.insertWord('${cleanPrediction.replace(/'/g, "\\'")}')"
                                  title="Click to insert">
-                                ${cleanPred}
-                                <small style="position: absolute; top: 8px; right: 8px; 
-                                       background: #e5e7eb; color: #6b7280; font-size: 11px;
-                                       padding: 2px 6px; border-radius: 10px;">
-                                    ${confidence}%
-                                </small>
+                                ${cleanPrediction}
+                                <span class="confidence-badge">${confidence}%</span>
                             </div>
                         `;
-                    })
-                    .join('');
+                    }
+                });
                 
-                this.elements.predictionsContainer.innerHTML = html || `
-                    <div class="loading">
-                        No valid predictions found.
-                    </div>
-                `;
+                if (!html) {
+                    html = `
+                        <div class="loading">
+                            No valid predictions found.
+                        </div>
+                    `;
+                }
+                
+                this.predictionsContainer.innerHTML = html;
             }
             
             displaySentences(data) {
                 const sentences = data.sentence_predictions || [];
                 
-                if (!this.elements.includeSentences.checked || sentences.length === 0) {
-                    this.elements.sentenceContainer.innerHTML = `
+                if (!this.includeSentences.checked || sentences.length === 0) {
+                    this.sentenceContainer.innerHTML = `
                         <div class="loading">
                             No sentence predictions available.
                         </div>
@@ -827,78 +955,99 @@
                     return;
                 }
                 
-                const html = sentences.map(sentence => {
-                    const escapedSentence = sentence.replace(/'/g, "\\'");
-                    return `
+                let html = '';
+                sentences.forEach((sentence, index) => {
+                    // Highlight the continuation part
+                    const originalText = data.original_text;
+                    let displaySentence = sentence;
+                    
+                    if (sentence.startsWith(originalText)) {
+                        const continuation = sentence.substring(originalText.length).trim();
+                        displaySentence = `<strong>${originalText}</strong> ${continuation}`;
+                    }
+                    
+                    html += `
                         <div class="sentence-item" 
-                             onclick="predictor.insertSentence('${escapedSentence}')"
+                             onclick="predictor.insertSentence('${sentence.replace(/'/g, "\\'")}')"
                              title="Click to use this sentence">
-                            ${sentence}
+                            ${displaySentence}
                         </div>
                     `;
-                }).join('');
+                });
                 
-                this.elements.sentenceContainer.innerHTML = html;
+                this.sentenceContainer.innerHTML = html;
             }
             
             insertWord(word) {
-                const input = this.elements.inputText;
+                const input = this.input;
+                const currentText = input.value;
                 const cursorPos = input.selectionStart;
-                const beforeCursor = input.value.substring(0, cursorPos);
-                const afterCursor = input.value.substring(cursorPos);
                 
+                // Insert word at cursor position
+                const beforeCursor = currentText.substring(0, cursorPos);
+                const afterCursor = currentText.substring(cursorPos);
+                
+                // Check if we need to add a space before the word
                 let insertText = word;
                 if (beforeCursor && !beforeCursor.endsWith(' ') && beforeCursor.length > 0) {
                     insertText = ' ' + word;
                 }
                 
                 input.value = beforeCursor + insertText + afterCursor;
-                input.selectionStart = input.selectionEnd = cursorPos + insertText.length;
                 
+                // Move cursor after inserted word
+                const newCursorPos = cursorPos + insertText.length;
+                input.selectionStart = newCursorPos;
+                input.selectionEnd = newCursorPos;
+                
+                // Trigger new prediction
                 this.lastInput = input.value;
                 this.predict();
+                
+                // Focus back on input
                 input.focus();
             }
             
             insertSentence(sentence) {
-                this.elements.inputText.value = sentence;
+                this.input.value = sentence;
                 this.lastInput = sentence;
                 this.predict();
-                this.elements.inputText.focus();
+                this.input.focus();
             }
             
             updateStatus(data) {
-                this.elements.detectedLang.textContent = data.language.toUpperCase();
-                this.elements.responseTime.textContent = data.response_time_ms;
+                this.detectedLang.textContent = data.language.toUpperCase();
+                this.responseTime.textContent = data.response_time_ms;
                 this.setStatus('Ready');
                 
+                // Show correction message if any
                 if (data.correction_msg) {
                     this.showCorrectionMessage(`Auto-corrected: ${data.correction_msg}`);
                 }
             }
             
             setStatus(message) {
-                this.elements.status.textContent = message;
-                this.elements.status.style.color = message.includes('Error') ? '#dc2626' : '';
+                this.status.textContent = message;
+                this.status.style.color = message.includes('Error') ? '#dc2626' : '';
             }
             
             clearPredictions() {
-                this.elements.predictionsContainer.innerHTML = `
+                this.predictionsContainer.innerHTML = `
                     <div class="loading">
                         Start typing to see predictions...
                     </div>
                 `;
-                this.elements.sentenceContainer.innerHTML = `
+                this.sentenceContainer.innerHTML = `
                     <div class="loading">
                         Sentence predictions will appear here...
                     </div>
                 `;
-                this.elements.detectedLang.textContent = '-';
-                this.elements.responseTime.textContent = '-';
-                this.elements.accuracyScore.textContent = '--%';
-                this.elements.accuracyScore.style.background = '#10b981';
+                this.detectedLang.textContent = '-';
+                this.responseTime.textContent = '-';
+                this.accuracyScore.textContent = '--%';
+                this.accuracyScore.style.background = '#10b981';
                 this.setStatus('Ready');
-                this.elements.correctionMessage.style.display = 'none';
+                this.correctionMessage.style.display = 'none';
             }
         }
         
