@@ -205,7 +205,7 @@ Input text: "{text}"
 # ---------- Spell Checker ----------
 class SpellChecker:
     def __init__(self):
-        self.dictionaries: Dict[str, set] = {}
+        self.dictionaries: Dict[str, Dict[str, int]] = {}
         self.load_all_dictionaries()
     
     def load_all_dictionaries(self):
@@ -213,42 +213,156 @@ class SpellChecker:
         for lang in available_langs:
             dict_path = os.path.join(DATA_DIR, f"{lang}_word_frequency.txt")
             if os.path.exists(dict_path):
-                self.load_dictionary(lang, dict_path)
+                success = self.load_dictionary(lang, dict_path)
+                if success:
+                    print(f"✅ Loaded dictionary for {lang}: {len(self.dictionaries[lang])} words")
+                else:
+                    print(f"❌ Failed to load dictionary for {lang}")
+                    self.dictionaries[lang] = {}
+            else:
+                print(f"⚠️ Dictionary file not found for {lang}: {dict_path}")
+                self.dictionaries[lang] = {}
     
-    def load_dictionary(self, lang: str, path: str):
-        words = set()
+    def load_dictionary(self, lang: str, path: str) -> bool:
+        words: Dict[str, int] = {}
         try:
             with open(path, 'r', encoding='utf-8') as f:
+                line_count = 0
                 for line in f:
+                    line_count += 1
                     line = line.strip()
-                    if line:
-                        parts = line.split()
-                        if parts:
-                            words.add(parts[0].lower())
+                    if not line:
+                        continue
+                    
+                    parts = line.split()
+                    if len(parts) >= 2:
+                        word = parts[0].lower().strip()
+                        try:
+                            freq = int(parts[1])
+                            words[word] = freq
+                        except ValueError:
+                            # If frequency is not a number, use 1
+                            words[word] = 1
+                    elif len(parts) == 1:
+                        # Just a word without frequency
+                        word = parts[0].lower().strip()
+                        words[word] = 1
+                    else:
+                        print(f"  Skipping line {line_count}: '{line}'")
+            
             self.dictionaries[lang] = words
-        except:
-            self.dictionaries[lang] = set()
+            print(f"  Processed {line_count} lines, got {len(words)} unique words")
+            return True
+            
+        except Exception as e:
+            print(f"Error loading dictionary {lang}: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
     
     def get_available_languages(self) -> List[str]:
-        return list(self.dictionaries.keys())
+        return [lang for lang in self.dictionaries if self.dictionaries[lang]]
     
     def correct_text(self, text: str, lang: str = "en") -> str:
-        if not text or lang not in self.dictionaries:
+        """Correct all words in text"""
+        print(f"\n🔧 Spell checking: '{text}' in {lang}")
+        
+        if not text or not text.strip():
             return text
+        
+        if lang not in self.dictionaries or not self.dictionaries[lang]:
+            print(f"  No dictionary available for {lang}")
+            return text
+        
+        print(f"  Dictionary size: {len(self.dictionaries[lang])} words")
+        
         words = text.split()
         corrected_words = []
-        for word in words:
+        
+        for i, word in enumerate(words):
+            original_word = word
             corrected_word = self.correct_word(word, lang)
+            
+            if corrected_word != original_word:
+                print(f"  ✓ Corrected '{original_word}' → '{corrected_word}'")
+            else:
+                print(f"  ✓ '{original_word}' is correct")
+            
             corrected_words.append(corrected_word)
-        return " ".join(corrected_words)
+        
+        result = " ".join(corrected_words)
+        print(f"  Result: '{result}'")
+        return result
     
     def correct_word(self, word: str, lang: str) -> str:
+        """Correct a single word based on frequency"""
         if not word or lang not in self.dictionaries:
             return word
+        
+        # Clean the word - remove surrounding punctuation but keep it
+        original_word = word
+        
+        # Handle common cases
         word_lower = word.lower()
+        
+        # Direct match
         if word_lower in self.dictionaries[lang]:
             return word
+        
+        # Try removing common suffixes/endings
+        if word_lower.endswith(('ing', 'ed', 's', 'ly', "'s", "n't")):
+            base_word = word_lower[:-3] if word_lower.endswith('ing') else \
+                       word_lower[:-2] if word_lower.endswith('ed') else \
+                       word_lower[:-1] if word_lower.endswith('s') else \
+                       word_lower[:-2] if word_lower.endswith('ly') else \
+                       word_lower[:-3] if word_lower.endswith("'s") else \
+                       word_lower[:-4] if word_lower.endswith("n't") else word_lower
+            
+            if base_word in self.dictionaries[lang]:
+                return word_lower if word.islower() else word.title() if word.istitle() else base_word
+        
+        # Try difflib for fuzzy matching
+        try:
+            import difflib
+            
+            # Get all dictionary words
+            dict_words = list(self.dictionaries[lang].keys())
+            
+            # Find close matches
+            matches = difflib.get_close_matches(
+                word_lower, 
+                dict_words, 
+                n=3, 
+                cutoff=0.7
+            )
+            
+            if matches:
+                # Get the most frequent match
+                best_match = max(matches, key=lambda w: self.dictionaries[lang][w])
+                
+                # Preserve original capitalization
+                if word.isupper():
+                    return best_match.upper()
+                elif word.istitle():
+                    return best_match.title()
+                else:
+                    return best_match
+                    
+        except ImportError:
+            print("difflib not available")
+        except Exception as e:
+            print(f"Error in fuzzy matching: {e}")
+        
+        # If no correction found, return original word
         return word
+    
+    def is_correct(self, word: str, lang: str) -> bool:
+        """Check if a word is spelled correctly"""
+        if not word or lang not in self.dictionaries:
+            return True
+        
+        word_lower = word.lower()
+        return word_lower in self.dictionaries[lang]
 
 # ---------- FastAPI App ----------
 app = FastAPI(
@@ -306,21 +420,42 @@ def get_ngram_model(lang: str):
     return MODEL_CACHE[lang]
 
 def auto_correct_text(text: str, lang: str) -> Tuple[str, str]:
-    if not text or lang not in spell_checker.get_available_languages():
+    """Auto-correct the text and return correction message"""
+    if not text or not text.strip():
         return text, ""
-    words = text.strip().split()
-    if not words:
+    
+    print(f"\n🔄 Auto-correcting text: '{text}'")
+    print(f"   Language: {lang}")
+    print(f"   Spell checker available languages: {spell_checker.get_available_languages()}")
+    
+    if lang not in spell_checker.get_available_languages():
+        print(f"   Language {lang} not available for spell checking")
         return text, ""
-    last_word = words[-1]
-    if len(last_word) < 2:
-        return text, ""
-    corrected_word = spell_checker.correct_word(last_word, lang)
-    if corrected_word != last_word and corrected_word:
-        words[-1] = corrected_word
-        corrected_text = " ".join(words)
-        correction_msg = f"'{last_word}' → '{corrected_word}'"
-        return corrected_text, correction_msg
-    return text, ""
+    
+    # Get original text
+    original_text = text
+    
+    # Correct the entire text
+    corrected_text = spell_checker.correct_text(text, lang)
+    
+    # Generate correction message
+    corrections = []
+    if corrected_text != original_text:
+        original_words = original_text.split()
+        corrected_words = corrected_text.split()
+        
+        for orig, corr in zip(original_words, corrected_words):
+            if orig != corr:
+                corrections.append(f"'{orig}'→'{corr} '")
+    
+    if corrections:
+        correction_msg = "Auto-corrected: " + ", ".join(corrections)
+        print(f"   Correction message: {correction_msg}")
+    else:
+        correction_msg = ""
+        print(f"   No corrections needed")
+    
+    return corrected_text, correction_msg
 
 @app.get("/")
 async def home():
