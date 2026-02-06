@@ -7,3 +7,5 @@ langdetect
 jiwer
 python-multipart
 python-dotenv
+groq
+
