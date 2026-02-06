@@ -1,0 +1,48 @@
+hello how are you  
+hello how is your day  
+how are you doing today  
+how are you my friend  
+what are you doing now  
+what are you doing today  
+what is your name  
+my name is kalyan  
+my name is rahul  
+my name is anil  
+where are you going  
+where are you from  
+i am from india  
+i am going to college  
+i am going to office  
+i like to play cricket  
+i like to play football  
+i like to watch movies  
+do you like music  
+do you like cricket  
+can you help me  
+can you help me please  
+please help me with this  
+thank you very much  
+thank you for your help  
+good morning my friend  
+good morning everyone  
+good evening my friend  
+good night see you  
+see you tomorrow  
+see you later  
+what is the time now  
+what is your age  
+how is the weather today  
+the weather is very good  
+the weather is very hot  
+the weather is very cold  
+i am learning python  
+i am learning machine learning  
+i am working on a project  
+this is my final year project  
+this project is about next word prediction  
+next word prediction using n gram model  
+this model predicts the next word  
+the system suggests next sentence  
+fastapi is used for backend  
+html is used for frontend  
+this application supports english language
