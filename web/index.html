@@ -39,37 +39,8 @@
             margin-bottom: 8px;
         }
 
-        .subtitle {
-            opacity: 0.9;
-            font-size: 1rem;
-            margin-bottom: 10px;
-        }
-
-        .model-badge {
-            display: inline-block;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 6px 12px;
-            border-radius: 15px;
-            font-size: 14px;
-            font-weight: 600;
-            margin-left: 10px;
-        }
-
-        .model-ngram {
-            background: #10b981;
-        }
-
-        .model-groq {
-            background: #8b5cf6;
-        }
-
         .main-content {
             padding: 30px;
-        }
-
-        .input-section {
-            margin-bottom: 30px;
-            position: relative;
         }
 
         textarea {
@@ -80,247 +51,6 @@
             border-radius: 12px;
             font-size: 18px;
             resize: vertical;
-            transition: all 0.3s;
-            font-family: inherit;
-            line-height: 1.5;
-        }
-
-        textarea:focus {
-            outline: none;
-            border-color: #4f46e5;
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-        }
-
-        .input-buttons {
-            position: absolute;
-            right: 15px;
-            bottom: 15px;
-            display: flex;
-            gap: 10px;
-        }
-
-        .btn {
-            padding: 10px 16px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .btn-primary {
-            background: #4f46e5;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #4338ca;
-        }
-
-        .btn-secondary {
-            background: #f3f4f6;
-            color: #374151;
-        }
-
-        .btn-secondary:hover {
-            background: #e5e7eb;
-        }
-
-        .btn-danger {
-            background: #ef4444;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #dc2626;
-        }
-
-        .btn-success {
-            background: #10b981;
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #059669;
-        }
-
-        .btn-groq {
-            background: #8b5cf6;
-            color: white;
-        }
-
-        .btn-groq:hover {
-            background: #7c3aed;
-        }
-
-        .key-hint {
-            color: #6b7280;
-            font-size: 13px;
-            margin-top: 5px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .controls {
-            display: flex;
-            gap: 15px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .model-toggle {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: #f3f4f6;
-            padding: 8px 12px;
-            border-radius: 20px;
-        }
-
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 30px;
-        }
-
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .toggle-slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: #10b981;
-            transition: .4s;
-            border-radius: 34px;
-        }
-
-        .toggle-slider:before {
-            position: absolute;
-            content: "";
-            height: 22px;
-            width: 22px;
-            left: 4px;
-            bottom: 4px;
-            background: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        input:checked + .toggle-slider {
-            background: #8b5cf6;
-        }
-
-        input:checked + .toggle-slider:before {
-            transform: translateX(30px);
-        }
-
-        .toggle-label {
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .toggle-label-left {
-            color: #10b981;
-        }
-
-        .toggle-label-right {
-            color: #8b5cf6;
-        }
-
-        select, .checkbox-group {
-            padding: 10px 16px;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 15px;
-            background: white;
-            cursor: pointer;
-        }
-
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            user-select: none;
-        }
-
-        .checkbox-group input {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-        }
-
-        .status-bar {
-            background: #f8fafc;
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin: 20px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 14px;
-        }
-
-        .language-badge {
-            background: #4f46e5;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-weight: 500;
-        }
-
-        .accuracy-badge {
-            background: #10b981;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-weight: 500;
-        }
-
-        .correction-msg {
-            background: #fef3c7;
-            border-left: 4px solid #f59e0b;
-            padding: 10px 15px;
-            border-radius: 6px;
-            margin: 10px 0;
-            font-size: 14px;
-            display: none;
-        }
-
-        .predictions-section {
-            margin-bottom: 30px;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .section-header h3 {
-            color: #374151;
-            font-size: 1.2rem;
-        }
-
-        .model-indicator {
-            font-size: 12px;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-weight: 600;
         }
 
         .predictions-grid {
@@ -335,121 +65,144 @@
             border-radius: 10px;
             padding: 16px;
             cursor: pointer;
-            transition: all 0.2s;
             text-align: center;
-            font-size: 16px;
-            position: relative;
         }
 
-        .prediction-item:hover {
-            background: #4f46e5;
-            color: white;
-            border-color: #4f46e5;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
-        }
+        /* ================= MOBILE UI ADDED ================= */
 
-        .confidence-badge {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            background: #e5e7eb;
-            color: #6b7280;
-            font-size: 11px;
-            padding: 2px 6px;
-            border-radius: 10px;
-        }
+        @media (max-width: 900px) {
+            body {
+                padding: 0;
+                background: white;
+            }
 
-        .prediction-item:hover .confidence-badge {
-            background: rgba(255, 255, 255, 0.3);
-            color: white;
-        }
-
-        .sentence-item {
-            background: #f0f9ff;
-            border: 2px solid #bae6fd;
-            border-radius: 10px;
-            padding: 16px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 15px;
-            line-height: 1.5;
-        }
-
-        .sentence-item:hover {
-            background: #e0f2fe;
-            transform: translateY(-2px);
-        }
-
-        .loading {
-            text-align: center;
-            padding: 20px;
-            color: #6b7280;
-            grid-column: 1 / -1;
-        }
-
-        .speech-status {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 8px;
-            display: none;
-            font-size: 14px;
-        }
-
-        .speech-listening {
-            background: #dcfce7;
-            color: #166534;
-            border-left: 4px solid #10b981;
-        }
-
-        .speech-error {
-            background: #fee2e2;
-            color: #991b1b;
-            border-left: 4px solid #ef4444;
-        }
-
-        .api-status {
-            margin-top: 10px;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 13px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .api-online {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .api-offline {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        @media (max-width: 768px) {
             .container {
-                margin: 10px;
+                margin: 0;
+                border-radius: 0;
+                min-height: 100vh;
             }
-            
-            .predictions-grid {
-                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+
+            header {
+                padding: 16px;
+                text-align: center;
             }
-            
-            .controls {
-                flex-direction: column;
-                align-items: stretch;
+
+            h1 {
+                font-size: 1.5rem;
             }
-            
+
+            .main-content {
+                padding: 12px;
+            }
+
+            textarea {
+                font-size: 16px;
+                min-height: 120px;
+                border-radius: 10px;
+            }
+
             .input-buttons {
                 position: static;
-                margin-top: 10px;
-                justify-content: flex-end;
+                margin-top: 8px;
+                justify-content: space-between;
+            }
+
+            .btn {
+                flex: 1;
+                padding: 12px;
+                font-size: 16px;
+            }
+
+            .controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .model-toggle {
+                justify-content: center;
+                padding: 12px;
+            }
+
+            select, .checkbox-group {
+                width: 100%;
+                padding: 12px;
+                font-size: 16px;
+            }
+
+            .status-bar {
+                flex-direction: column;
+                gap: 6px;
+                text-align: center;
+                font-size: 13px;
+            }
+
+            .predictions-section {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: white;
+                border-top: 2px solid #e5e7eb;
+                padding: 10px;
+                max-height: 45vh;
+                overflow-y: auto;
+                box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
+            }
+
+            .predictions-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+
+            .prediction-item {
+                padding: 14px 6px;
+                font-size: 15px;
+            }
+
+            .sentence-item {
+                font-size: 14px;
+                padding: 12px;
+            }
+
+            .confidence-badge {
+                font-size: 10px;
+            }
+
+            #sentenceSection {
+                margin-bottom: 48vh;
             }
         }
+
+        @media (max-width: 400px) {
+            .predictions-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .btn {
+                font-size: 14px;
+            }
+
+            textarea {
+                font-size: 15px;
+            }
+        }
+
+        /* Touch improvement */
+        @media (hover: none) {
+            .prediction-item:active {
+                background: #4f46e5;
+                color: white;
+                transform: scale(0.97);
+            }
+
+            .btn {
+                min-height: 46px;
+            }
+        }
+
     </style>
 </head>
+
 <body>
     <div class="container">
         <header>
@@ -458,108 +211,67 @@
                 Multi-language next word prediction 
                 <span id="modelBadge" class="model-badge model-ngram">N-gram</span>
             </div>
-            <div id="apiStatus" class="api-status api-online" style="display: none;">
-                <span>✅ Groq API Connected</span>
-            </div>
         </header>
-        
+
         <div class="main-content">
+
             <div class="input-section">
                 <textarea 
                     id="inputText" 
                     placeholder="Start typing here... or click the microphone to speak"
                     autofocus
                 ></textarea>
-                
+
                 <div class="input-buttons">
-                    <button class="btn btn-secondary" onclick="predictor.startVoiceInput()" title="Voice Input">
-                        🎤
-                    </button>
-                    <button class="btn btn-danger" onclick="predictor.clearText()" title="Clear Text">
-                        ✕ Clear
-                    </button>
+                    <button class="btn btn-secondary" onclick="predictor.startVoiceInput()">🎤</button>
+                    <button class="btn btn-danger" onclick="predictor.clearText()">✕ Clear</button>
                 </div>
-                
-                <div class="key-hint">
-                    <span>💡 Tip: Click on any word below to add it to the text</span>
-                    <span>• Press Space for auto-correction</span>
-                </div>
-                
-                <div class="correction-msg" id="correctionMessage"></div>
-                
-                <div id="speechStatus" class="speech-status"></div>
             </div>
-            
+
             <div class="controls">
                 <div class="model-toggle">
-                    <span class="toggle-label toggle-label-left">N-gram</span>
+                    <span>N-gram</span>
                     <label class="toggle-switch">
                         <input type="checkbox" id="modelToggle">
                         <span class="toggle-slider"></span>
                     </label>
-                    <span class="toggle-label toggle-label-right">Groq AI</span>
+                    <span>Groq AI</span>
                 </div>
-                
+
                 <select id="languageSelect">
                     <option value="auto">Auto Detect Language</option>
                     <option value="en">English</option>
                     <option value="hi">Hindi</option>
                     <option value="te">Telugu</option>
                     <option value="ta">Tamil</option>
-                    <option value="kn">Kannada</option>
-                    <option value="fr">French</option>
                 </select>
-                
+
                 <div class="checkbox-group">
                     <input type="checkbox" id="autoCorrect" checked>
-                    <label for="autoCorrect">Auto-correct</label>
-                </div>
-                
-                <div class="checkbox-group">
-                    <input type="checkbox" id="autoPredict" checked>
-                    <label for="autoPredict">Auto-predict</label>
-                </div>
-                
-                <div class="checkbox-group">
-                    <input type="checkbox" id="includeSentences" checked>
-                    <label for="includeSentences">Show sentences</label>
+                    <label>Auto-correct</label>
                 </div>
             </div>
-            
+
             <div class="status-bar">
-                <div>
-                    Status: <span id="status">Ready</span>
-                </div>
-                <div>
-                    Language: <span id="detectedLang" class="language-badge">-</span>
-                </div>
-                <div>
-                    Accuracy: <span id="accuracyScore" class="accuracy-badge">--%</span>
-                </div>
-                <div>
-                    Time: <span id="responseTime">-</span>ms
-                </div>
+                <div>Status: <span id="status">Ready</span></div>
+                <div>Language: <span id="detectedLang">-</span></div>
+                <div>Accuracy: <span id="accuracyScore">--%</span></div>
             </div>
-            
+
             <div class="predictions-section">
-                <div class="section-header">
-                    <h3>Next Word Predictions:</h3>
-                    <span id="wordModelIndicator" class="model-indicator" style="background: #10b981; color: white;">N-gram</span>
-                </div>
+                <h3>Next Word Predictions:</h3>
                 <div id="predictionsContainer" class="predictions-grid">
-                    <div class="loading">Start typing to see predictions...</div>
+                    <div class="loading">Start typing...</div>
                 </div>
             </div>
-            
+
             <div class="predictions-section" id="sentenceSection">
-                <div class="section-header">
-                    <h3>Sentence Completions:</h3>
-                    <span id="sentenceModelIndicator" class="model-indicator" style="background: #10b981; color: white;">N-gram</span>
-                </div>
+                <h3>Sentence Completions:</h3>
                 <div id="sentenceContainer" class="predictions-grid">
-                    <div class="loading">Sentence predictions will appear here...</div>
+                    <div class="loading">Waiting...</div>
                 </div>
             </div>
+
         </div>
     </div>
 
@@ -1059,3 +771,4 @@
     </script>
 </body>
 </html>
+
