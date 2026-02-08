@@ -1088,27 +1088,42 @@
         }
         
         async autoCorrectText() {
-            const text = this.input.value;
-            if (!text.trim()) return;
+    const text = this.input.value;
+    if (!text.trim()) return;
+    
+    const lang = this.languageSelect.value === 'auto' ? 'en' : this.languageSelect.value;
+    
+    try {
+        this.setStatus('Correcting...');
+        
+        const response = await fetch(`/correct?text=${encodeURIComponent(text)}&lang=${lang}`);
+        const data = await response.json();
+        
+        console.log('Correction response:', data);
+        
+        if (data.corrected && data.corrected !== text) {
+            // Replace the entire text with corrected version
+            this.input.value = data.corrected;
             
-            const lang = this.languageSelect.value === 'auto' ? 'en' : this.languageSelect.value;
+            // Show correction message
+            this.showCorrectionMessage(`Corrected: "${data.original}" → "${data.corrected}"`);
             
-            try {
-                this.setStatus('Correcting...');
-                
-                const response = await fetch(`/correct?text=${encodeURIComponent(text)}&lang=${lang}`);
-                const data = await response.json();
-                
-                if (data.corrected !== text) {
-                    this.input.value = data.corrected;
-                    this.showCorrectionMessage(`Corrected: "${data.original}" → "${data.corrected}"`);
-                    this.predict();
-                }
-            } catch (error) {
-                console.error('Auto-correction failed:', error);
-                this.setStatus('Error correcting text');
-            }
+            // Trigger new prediction
+            this.lastInput = this.input.value;
+            this.predict();
+            
+            // Focus back on input
+            this.input.focus();
+            
+            // Move cursor to end
+            this.input.selectionStart = this.input.value.length;
+            this.input.selectionEnd = this.input.value.length;
         }
+    } catch (error) {
+        console.error('Auto-correction failed:', error);
+        this.setStatus('Error correcting text');
+    }
+}
         
         showCorrectionMessage(message) {
             this.correctionMessage.textContent = message;
@@ -1352,3 +1367,4 @@
 </script>
 </body>
 </html>
+
