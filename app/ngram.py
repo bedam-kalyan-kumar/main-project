@@ -2,8 +2,9 @@
 import os
 import re
 import pickle
+import random
 from collections import Counter, defaultdict
-from typing import List
+from typing import List, Tuple
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
@@ -12,6 +13,8 @@ DATA_DIR = os.path.join(BASE_DIR, "data")
 def tokenize(text: str, lang: str = "en") -> List[str]:
     """Language-aware tokenization"""
     text = text.lower().strip()
+    if not text:
+        return []
     
     # For Indian languages
     if lang in ["hi", "te", "ta", "kn"]:
@@ -30,11 +33,17 @@ class BackoffNGram:
         self.ngrams = [defaultdict(Counter) for _ in range(n)]
         self.vocab = Counter()
     
+    def _tokenize(self, text: str, lang: str) -> List[str]:
+        """Internal tokenization method"""
+        return tokenize(text, lang)
+    
     def train(self, sentences: List[str], lang: str = "en"):
         """Train model on sentences"""
         for sent in sentences:
-            tokens = tokenize(sent, lang)
-            
+            tokens = self._tokenize(sent, lang)
+            if not tokens:
+                continue
+                
             # Build n-grams of different orders
             for order in range(1, self.n + 1):
                 for i in range(len(tokens) - order + 1):
@@ -43,46 +52,15 @@ class BackoffNGram:
                     self.ngrams[order - 1][context][next_word] += 1
             
             # Update vocabulary
-            for token in tokens:
-                self.vocab[token] += 1
-    def generate_sentence(self, text: str, max_words: int = 15, lang: str = "en") -> str:
-        tokens = self._tokenize(text, lang)
-        if not tokens:
-            return text
-
-        generated = tokens[:]
-
-        for _ in range(max_words):
-            context = tuple(generated[-2:]) if len(generated) >= 2 else tuple(generated)
-            candidates = None
-
-            if context in self.ngrams[2]:
-                candidates = self.ngrams[2][context]
-            elif (context[-1:],) in self.ngrams[1]:
-                candidates = self.ngrams[1][context[-1:]]
-            elif () in self.ngrams[0]:
-                candidates = self.ngrams[0][()]
-
-            if not candidates:
-                break
-
-            next_word = max(candidates, key=candidates.get)
-            generated.append(next_word)
-
-            if next_word in ['.', '!', '?', '।']:
-                break
-
-        return " ".join(generated)
-
+            self.vocab.update(tokens)
     
     def predict(self, text: str, k: int = 5, lang: str = "en") -> List[str]:
         """Predict next words with backoff smoothing"""
-        tokens = tokenize(text, lang)
-        
-        # Try higher order n-grams first, then back off
+        tokens = self._tokenize(text, lang)
         predictions = []
         seen = set()
         
+        # Try higher order n-grams first, then back off
         for order in range(min(self.n, len(tokens) + 1), 0, -1):
             if len(tokens) >= order - 1:
                 context = tuple(tokens[-(order - 1):]) if order > 1 else tuple()
@@ -91,31 +69,111 @@ class BackoffNGram:
                     candidates = self.ngrams[order - 1][context].most_common(k * 2)
                     
                     for word, count in candidates:
-                        if word not in seen:
+                        if word not in seen and not word.isdigit():
                             predictions.append(word)
                             seen.add(word)
-                            
                             if len(predictions) >= k:
-                                break
+                                return predictions[:k]
         
         # Fallback to most common words in vocabulary
         if len(predictions) < k:
-            for word, _ in self.vocab.most_common(k * 2):
-                if word not in seen:
+            for word, count in self.vocab.most_common(k * 2):
+                if word not in seen and not word.isdigit():
                     predictions.append(word)
                     seen.add(word)
-                    
                     if len(predictions) >= k:
                         break
         
-        # Clean predictions - remove numbers
-        cleaned_predictions = []
-        for pred in predictions:
-            # Remove any standalone numbers
-            if not pred.isdigit():
-                cleaned_predictions.append(pred)
+        return predictions[:k]
+    
+    def generate_sentence(self, text: str, max_words: int = 15, lang: str = "en") -> str:
+        """Generate a sentence continuation"""
+        tokens = self._tokenize(text, lang)
+        if not tokens:
+            # Start with a common word if no input
+            common_words = [w for w, c in self.vocab.most_common(20) if w[0].isalpha()]
+            if common_words:
+                tokens = [random.choice(common_words)]
+            else:
+                return ""
         
-        return cleaned_predictions[:k]
+        generated = tokens.copy()
+        
+        for _ in range(max_words):
+            # Try trigram context first
+            if len(generated) >= 2:
+                context = tuple(generated[-2:])
+                if context in self.ngrams[2]:
+                    candidates = list(self.ngrams[2][context].keys())
+                    if candidates:
+                        next_word = random.choice(candidates[:10])
+                        generated.append(next_word)
+                        continue
+            
+            # Fallback to bigram
+            if len(generated) >= 1:
+                context = tuple(generated[-1:])
+                if context in self.ngrams[1]:
+                    candidates = list(self.ngrams[1][context].keys())
+                    if candidates:
+                        next_word = random.choice(candidates[:10])
+                        generated.append(next_word)
+                        continue
+            
+            # Fallback to unigram
+            candidates = list(self.ngrams[0][()].keys())
+            if candidates:
+                next_word = random.choice(candidates[:20])
+                generated.append(next_word)
+            else:
+                break
+            
+            # Random chance to end sentence
+            if random.random() < 0.2 and len(generated) > 5:
+                if generated[-1] not in '.!?।':
+                    generated.append('.')
+                break
+        
+        # Ensure sentence ends with punctuation
+        if generated[-1] not in '.!?।':
+            generated.append('.')
+        
+        # Convert to proper string
+        sentence = ""
+        for i, token in enumerate(generated):
+            if i == 0:
+                sentence += token.capitalize()
+            elif token in '.,!?;:':
+                sentence += token
+            else:
+                sentence += " " + token
+        
+        return sentence
+    
+    def predict_sentences(self, text: str, num_sentences: int = 3, max_words: int = 15, lang: str = "en") -> List[str]:
+        """Generate multiple sentence completions"""
+        sentences = []
+        seen = set()
+        
+        for attempt in range(num_sentences * 3):  # Try multiple times
+            if len(sentences) >= num_sentences:
+                break
+            
+            sentence = self.generate_sentence(text, max_words, lang)
+            
+            # Only add if it's meaningful and unique
+            if (sentence and 
+                sentence not in seen and 
+                len(sentence) > len(text) + 5 and
+                not sentence.startswith("import") and  # Filter out code
+                not sentence.startswith("def ") and
+                not sentence.startswith("class ") and
+                "=" not in sentence):
+                
+                sentences.append(sentence)
+                seen.add(sentence)
+        
+        return sentences[:num_sentences]
     
     def save(self, path: str):
         """Save model to file"""
@@ -124,7 +182,7 @@ class BackoffNGram:
                 'n': self.n,
                 'ngrams': self.ngrams,
                 'vocab': self.vocab
-            }, f)
+            }, f, protocol=pickle.HIGHEST_PROTOCOL)
     
     @classmethod
     def load(cls, path: str):
@@ -182,3 +240,43 @@ def load_model(lang: str = "en") -> BackoffNGram:
     except Exception as e:
         print(f"Error loading model for {lang}: {e}. Retraining...")
         return train_and_save(lang)
+
+
+# Test function
+def test_ngram_model():
+    """Test the N-gram model"""
+    print("Testing N-gram model...")
+    
+    # Sample training data
+    sample_sentences = [
+        "the quick brown fox jumps over the lazy dog",
+        "the cat in the hat sat on the mat",
+        "to be or not to be that is the question",
+        "all that glitters is not gold",
+        "a journey of a thousand miles begins with a single step"
+    ]
+    
+    # Create and train model
+    model = BackoffNGram(n=3)
+    model.train(sample_sentences, "en")
+    
+    # Test predictions
+    test_inputs = [
+        "the quick",
+        "to be or",
+        "a journey",
+        "the cat"
+    ]
+    
+    for text in test_inputs:
+        predictions = model.predict(text, k=3, lang="en")
+        print(f"Input: '{text}' -> Predictions: {predictions}")
+        
+        # Test sentence generation
+        sentence = model.generate_sentence(text, max_words=10, lang="en")
+        print(f"Generated sentence: {sentence}")
+        print()
+
+
+if __name__ == "__main__":
+    test_ngram_model()
