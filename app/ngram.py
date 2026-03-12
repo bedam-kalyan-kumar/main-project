@@ -1,3 +1,4 @@
+# ngram.py
 import os
 import re
 import pickle
@@ -51,7 +52,7 @@ class BackoffNGram:
         predictions = []
         seen = set()
         
-        for order in range(min(self.n, len(tokens) + 1), 0, -1):  # 3 2 1
+        for order in range(min(self.n, len(tokens) + 1), 0, -1):
             if len(tokens) >= order - 1:
                 context = tuple(tokens[-(order - 1):]) if order > 1 else tuple()
                 
@@ -73,7 +74,6 @@ class BackoffNGram:
         
         return predictions[:k]
     
-    # ✅ Generate continuation WITHOUT input text
     def generate_continuation(self, context_tokens: List[str], max_words: int = 5, lang: str = "en") -> str:
         """Generate continuation for ANY language"""
         if not context_tokens:
@@ -142,7 +142,6 @@ class BackoffNGram:
         
         return result
     
-    # ✅ Get multiple continuations (5 sentences)
     def predict_continuations(self, text: str, num_continuations: int = 5, max_words: int = 5, lang: str = "en") -> List[str]:
         """Get continuations for ANY language"""
         tokens = self._tokenize(text, lang)
@@ -163,6 +162,57 @@ class BackoffNGram:
                 seen.add(cont)
         
         return continuations[:num_continuations]
+    
+    def add_new_word(self, word: str, context: str = "", lang: str = "en"):
+        """
+        Add a new word to the vocabulary and update n-grams
+        """
+        word = word.lower().strip()
+        if not word or word in self.vocab:
+            return False
+        
+        # Add to vocabulary with initial count
+        self.vocab[word] = 1
+        
+        # If context provided, update appropriate n-gram
+        if context:
+            context_tokens = self._tokenize(context, lang)
+            if context_tokens:
+                # Update unigram (context = ())
+                self.ngrams[0][()][word] = 1
+                
+                # Update bigram if we have context
+                if len(context_tokens) >= 1:
+                    context_tuple = tuple(context_tokens[-1:])
+                    self.ngrams[1][context_tuple][word] = 1
+                
+                # Update trigram if we have enough context
+                if len(context_tokens) >= 2:
+                    context_tuple = tuple(context_tokens[-2:])
+                    self.ngrams[2][context_tuple][word] = 1
+        
+        return True
+    
+    def save_to_corpus(self, word: str, context: str, lang: str = "en"):
+        """
+        Save the new word to the corpus file for permanent storage
+        """
+        corpus_path = _corpus_path(lang)
+        try:
+            # Create a meaningful sentence with the new word
+            if context:
+                new_sentence = f"{context} {word}".strip()
+            else:
+                new_sentence = word
+            
+            # Append to corpus file
+            with open(corpus_path, "a", encoding="utf-8") as f:
+                f.write(f"\n{new_sentence}")
+            
+            return True
+        except Exception as e:
+            print(f"Error saving to corpus: {e}")
+            return False
     
     def save(self, path: str):
         with open(path, 'wb') as f:
