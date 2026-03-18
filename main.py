@@ -23,45 +23,113 @@ DATA_DIR = os.path.join(BASE_DIR, "app", "data")
 SESSION_ID = str(uuid.uuid4())[:8]
 
 # ---------- Groq Model ----------
+# ... (imports and setup) ...
+
 class GroqModelManager:
     LANG_NAMES = {
         "en": "English", "hi": "Hindi", "te": "Telugu",
         "ta": "Tamil", "kn": "Kannada", "fr": "French"
     }
-    
+
+    # Enhanced prompts with few-shot examples
     LANGUAGE_PROMPTS = {
-        "en": """Generate only the next words and continuations in English.
-Input text: "{text}"
-TASK 1 - Next words: Generate {num_words} single words that could come next
-TASK 2 - Continuations: Generate {num_sentences} short phrases (2-5 words) that continue this text
-Output ONLY in JSON: {{"words": ["w1","w2"], "continuations": ["p1","p2"]}}""",
-        "hi": """केवल अगले शब्द और वाक्यांश हिंदी में उत्पन्न करें।
+        "en": """You are a multilingual text predictor. Given the input text, predict the next possible words and short continuations.
+
+Input: "{text}"
+
+Generate {num_words} most likely next single words and {num_sentences} short phrase continuations (2‑5 words) that naturally follow.
+
+Output only valid JSON in this exact format:
+{{"words": ["word1", "word2", ...], "continuations": ["phrase1", "phrase2", ...]}}
+
+Examples:
+Input: "The weather is"
+Output: {{"words": ["nice", "cold", "beautiful", "hot", "good"], "continuations": ["very nice today", "getting colder", "perfect for a walk"]}}
+
+Input: "I am going to"
+Output: {{"words": ["the", "work", "school", "store", "sleep"], "continuations": ["the store later", "work tomorrow", "school right now"]}}
+
+Now for the given input:""",
+
+        "hi": """आप एक बहुभाषी पाठ भविष्यवक्ता हैं। दिए गए इनपुट पाठ के आधार पर, अगले संभावित शब्दों और छोटे वाक्यांशों की भविष्यवाणी करें।
+
 इनपुट: "{text}"
-कार्य 1 - अगले शब्द: {num_words} शब्द
-कार्य 2 - निरंतरता: {num_sentences} वाक्यांश
-JSON: {{"words": ["शब्द1"], "continuations": ["वाक्यांश1"]}}""",
-        "te": """తదుపరి పదాలు మరియు కొనసాగింపులను తెలుగులో మాత్రమే రూపొందించండి.
-ఇన్పుట్: "{text}"
-పని 1 - తదుపరి పదాలు: {num_words} పదాలు
-పని 2 - కొనసాగింపులు: {num_sentences} వాక్యాలు
-JSON: {{"words": ["పదం1"], "continuations": ["వాక్యం1"]}}""",
-        "ta": """அடுத்த சொற்கள் மற்றும் தொடர்ச்சிகளை தமிழில் மட்டும் உருவாக்கவும்.
+
+{num_words} सबसे संभावित अगले एकल शब्द और {num_sentences} छोटे वाक्यांश (2‑5 शब्द) उत्पन्न करें जो स्वाभाविक रूप से अनुसरण करते हैं।
+
+केवल JSON आउटपुट दें इस सटीक प्रारूप में:
+{{"words": ["शब्द1", "शब्द2", ...], "continuations": ["वाक्यांश1", "वाक्यांश2", ...]}}
+
+उदाहरण:
+इनपुट: "मौसम आज"
+आउटपुट: {{"words": ["बहुत", "अच्छा", "गर्म", "सुहावना", "खराब"], "continuations": ["बहुत अच्छा है", "गर्म हो गया", "सुहावना लग रहा"]}}
+
+इनपुट: "मैं जा रहा"
+आउटपुट: {{"words": ["हूँ", "था", "रहा", "चुका", "सकता"], "continuations": ["हूँ बाजार", "था स्कूल", "रहा हूँ घर"]}}
+
+अब दिए गए इनपुट के लिए:""",
+
+        "te": """మీరు బహుభాషా టెక్స్ట్ ప్రిడిక్టర్. ఇచ్చిన ఇన్‌పుట్ టెక్స్ట్ ఆధారంగా, తదుపరి సాధ్యమయ్యే పదాలు మరియు చిన్న కొనసాగింపులను అంచనా వేయండి.
+
+ఇన్‌పుట్: "{text}"
+
+{num_words} అత్యంత సంభావ్య తదుపరి ఒకే పదాలు మరియు {num_sentences} చిన్న పదబంధ కొనసాగింపులు (2‑5 పదాలు) ఉత్పత్తి చేయండి.
+
+ఖచ్చితమైన JSON ఆకృతిలో మాత్రమే అవుట్‌పుట్ ఇవ్వండి:
+{{"words": ["పదం1", "పదం2", ...], "continuations": ["పదబంధం1", "పదబంధం2", ...]}}
+
+ఉదాహరణలు:
+ఇన్‌పుట్: "వాతావరణం ఈ"
+అవుట్‌పుట్: {{"words": ["రోజు", "చాలా", "బాగుంది", "వేడిగా", "చల్లగా"], "continuations": ["రోజు చాలా బాగుంది", "వేడిగా ఉంది", "చల్లగా ఉంది"]}}
+
+ఇప్పుడు ఇచ్చిన ఇన్‌పుట్ కోసం:""",
+
+        "ta": """நீங்கள் ஒரு பன்மொழி உரை முன்கணிப்பாளர். கொடுக்கப்பட்ட உள்ளீட்டு உரையின் அடிப்படையில், அடுத்த சாத்தியமான சொற்கள் மற்றும் குறுகிய தொடர்ச்சிகளைக் கணிக்கவும்.
+
 உள்ளீடு: "{text}"
-பணி 1 - அடுத்த சொற்கள்: {num_words} சொற்கள்
-பணி 2 - தொடர்ச்சிகள்: {num_sentences} சொற்றொடர்கள்
-JSON: {{"words": ["சொல்1"], "continuations": ["சொற்றொடர்1"]}}""",
-        "kn": """ಮುಂದಿನ ಪದಗಳು ಮತ್ತು ಮುಂದುವರಿಕೆಗಳನ್ನು ಕನ್ನಡದಲ್ಲಿ ಮಾತ್ರ ರಚಿಸಿ.
-ಇನ್ಪುಟ್: "{text}"
-ಕಾರ್ಯ 1 - ಮುಂದಿನ ಪದಗಳು: {num_words} ಪದಗಳು
-ಕಾರ್ಯ 2 - ಮುಂದುವರಿಕೆಗಳು: {num_sentences} ನುಡಿಗಟ್ಟುಗಳು
-JSON: {{"words": ["ಪದ1"], "continuations": ["ನುಡಿಗಟ್ಟು1"]}}""",
-        "fr": """Générez uniquement les prochains mots et continuations en français.
-Texte : "{text}"
-TÂCHE 1 - Mots suivants : {num_words} mots
-TÂCHE 2 - Continuations : {num_sentences} phrases
-JSON: {{"words": ["mot1"], "continuations": ["phrase1"]}}"""
+
+{num_words} மிகவும் சாத்தியமான அடுத்த ஒற்றைச் சொற்கள் மற்றும் {num_sentences} குறுகிய சொற்றொடர் தொடர்ச்சிகள் (2‑5 சொற்கள்) உருவாக்கவும்.
+
+துல்லியமான JSON வடிவத்தில் மட்டும் வெளியீடு:
+{{"words": ["சொல்1", "சொல்2", ...], "continuations": ["சொற்றொடர்1", "சொற்றொடர்2", ...]}}
+
+எடுத்துக்காட்டுகள்:
+உள்ளீடு: "வானிலை இன்று"
+வெளியீடு: {{"words": ["மிகவும்", "நன்றாக", "வெயிலாக", "குளிர்ச்சியாக", "மோசமாக"], "continuations": ["மிகவும் நன்றாக உள்ளது", "வெயிலாக இருக்கிறது", "குளிர்ச்சியாக உள்ளது"]}}
+
+இப்போது கொடுக்கப்பட்ட உள்ளீட்டிற்கு:""",
+
+        "kn": """ನೀವು ಬಹುಭಾಷಾ ಪಠ್ಯ ಭವಿಷ್ಯಕಾರ. ನೀಡಿದ ಇನ್‌ಪುಟ್ ಪಠ್ಯದ ಆಧಾರದ ಮೇಲೆ, ಮುಂದಿನ ಸಂಭವನೀಯ ಪದಗಳು ಮತ್ತು ಸಣ್ಣ ಮುಂದುವರಿಕೆಗಳನ್ನು ಊಹಿಸಿ.
+
+ಇನ್‌ಪುಟ್: "{text}"
+
+{num_words} ಅತ್ಯಂತ ಸಂಭವನೀಯ ಮುಂದಿನ ಏಕ ಪದಗಳು ಮತ್ತು {num_sentences} ಸಣ್ಣ ನುಡಿಗಟ್ಟು ಮುಂದುವರಿಕೆಗಳನ್ನು (2‑5 ಪದಗಳು) ರಚಿಸಿ.
+
+ನಿಖರವಾದ JSON ಸ್ವರೂಪದಲ್ಲಿ ಮಾತ್ರ ಔಟ್‌ಪುಟ್ ನೀಡಿ:
+{{"words": ["ಪದ1", "ಪದ2", ...], "continuations": ["ನುಡಿಗಟ್ಟು1", "ನುಡಿಗಟ್ಟು2", ...]}}
+
+ಉದಾಹರಣೆಗಳು:
+ಇನ್‌ಪುಟ್: "ಹವಾಮಾನ ಇಂದು"
+ಔಟ್‌ಪುಟ್: {{"words": ["ತುಂಬಾ", "ಚೆನ್ನಾಗಿದೆ", "ಬಿಸಿಯಾಗಿದೆ", "ತಂಪಾಗಿದೆ", "ಕೆಟ್ಟದಾಗಿದೆ"], "continuations": ["ತುಂಬಾ ಚೆನ್ನಾಗಿದೆ", "ಬಿಸಿಯಾಗಿದೆ", "ತಂಪಾಗಿದೆ"]}}
+
+ಈಗ ನೀಡಿದ ಇನ್‌ಪುಟ್‌ಗಾಗಿ:""",
+
+        "fr": """Vous êtes un prédicteur de texte multilingue. Sur la base du texte d'entrée donné, prédisez les prochains mots possibles et les courtes continuations.
+
+Texte d'entrée : "{text}"
+
+Générez {num_words} prochains mots uniques les plus probables et {num_sentences} courtes continuations de phrases (2‑5 mots).
+
+Format de sortie JSON uniquement :
+{{"words": ["mot1", "mot2", ...], "continuations": ["phrase1", "phrase2", ...]}}
+
+Exemples :
+Entrée : "Le temps est"
+Sortie : {{"words": ["beau", "mauvais", "nuageux", "froid", "chaud"], "continuations": ["très beau aujourd'hui", "devenu mauvais", "agréable pour une promenade"]}}
+
+Maintenant pour le texte donné :"""
     }
-    
+
     def __init__(self):
         api_key = os.getenv("GROQ_API_KEY")
         if not api_key:
@@ -70,27 +138,30 @@ JSON: {{"words": ["mot1"], "continuations": ["phrase1"]}}"""
         self.model_name = "llama-3.3-70b-versatile"
         self.last_request_time = 0
         self.min_request_interval = 1.0
-    
+
     def _wait_for_rate_limit(self):
         import time
         current_time = time.time()
-        time_since_last = current_time - self.last_request_time
-        if time_since_last < self.min_request_interval:
-            time.sleep(self.min_request_interval - time_since_last)
+        if current_time - self.last_request_time < self.min_request_interval:
+            time.sleep(self.min_request_interval - (current_time - self.last_request_time))
         self.last_request_time = time.time()
-    
+
     def _clean_json_response(self, content):
         import re
+        # Remove markdown fences
         content = re.sub(r'^```json\s*', '', content, flags=re.MULTILINE)
         content = re.sub(r'^```\s*', '', content, flags=re.MULTILINE)
         content = re.sub(r'```$', '', content, flags=re.MULTILINE)
-        json_match = re.search(r'\{.*\}', content, re.DOTALL)
-        return json_match.group(0) if json_match else content
-    
+        # Extract JSON object
+        match = re.search(r'\{.*\}', content, re.DOTALL)
+        return match.group(0) if match else content
+
     def predict(self, text: str, num_words: int = 5, num_sentences: int = 3, lang: str = "en") -> Tuple[List[str], List[str]]:
+        # Get language-specific prompt (fallback to English if not defined)
         prompt = self.LANGUAGE_PROMPTS.get(lang, self.LANGUAGE_PROMPTS["en"]).format(
             text=text, num_words=num_words, num_sentences=num_sentences
         )
+        print(f"Groq request [{lang}]: {text}")
         self._wait_for_rate_limit()
         try:
             response = self.client.chat.completions.create(
@@ -101,16 +172,68 @@ JSON: {{"words": ["mot1"], "continuations": ["phrase1"]}}"""
                 timeout=30
             )
             content = response.choices[0].message.content
+            print(f"Groq response (first 200 chars): {content[:200]}")
             cleaned = self._clean_json_response(content)
             try:
                 data = json.loads(cleaned)
-                words = data.get("words", [])[:num_words]
-                conts = data.get("continuations", [])[:num_sentences]
+                words = data.get("words", [])
+                conts = data.get("continuations", [])
+                # Ensure lists, clean strings
+                if isinstance(words, str):
+                    words = [words]
+                if isinstance(conts, str):
+                    conts = [conts]
+                # Filter out any empty or placeholder items
+                words = [w.strip() for w in words if w and w.strip()][:num_words]
+                conts = [c.strip() for c in conts if c and c.strip()][:num_sentences]
+                print(f"Parsed words: {words}, continuations: {conts}")
                 return words, conts
-            except:
-                return [], []
-        except Exception:
+            except json.JSONDecodeError as e:
+                print(f"JSON decode error: {e}")
+                # Try to extract manually if JSON failed
+                words = self._extract_words_fallback(content, num_words, lang)
+                conts = self._extract_sentences_fallback(content, num_sentences, lang)
+                return words, conts
+        except Exception as e:
+            print(f"Groq API error: {e}")
             return [], []
+
+    def _extract_words_fallback(self, text, num_words, lang):
+        """Fallback extraction if JSON fails."""
+        import re
+        # Look for quoted words
+        words = re.findall(r'"([^"]+)"', text)
+        if not words:
+            # Try to find words after numbers or bullets
+            lines = text.split('\n')
+            for line in lines:
+                if re.match(r'^[\d\.\-\*•]\s+', line):
+                    word = re.sub(r'^[\d\.\-\*•]\s+', '', line).strip().strip('",.')
+                    if word:
+                        words.append(word)
+                elif line.strip() and not line.startswith('{') and not line.startswith('}'):
+                    word = line.strip().strip('",.')
+                    if word:
+                        words.append(word)
+        # Clean non-alphabetic tokens if English
+        if lang == "en":
+            words = [w for w in words if re.match(r'^[a-zA-Z]+$', w)]
+        return words[:num_words]
+
+    def _extract_sentences_fallback(self, text, num_sentences, lang):
+        import re
+        sentences = re.findall(r'"([^"]+)"', text)
+        if not sentences:
+            lines = text.split('\n')
+            for line in lines:
+                if re.match(r'^[\d\.\-\*•]\s+', line):
+                    sent = re.sub(r'^[\d\.\-\*•]\s+', '', line).strip().strip('",.')
+                    if sent:
+                        sentences.append(sent)
+                elif line.strip() and not line.startswith('{') and not line.startswith('}'):
+                    if len(line.split()) > 2:
+                        sentences.append(line.strip().strip('",.'))
+        return sentences[:num_sentences]
 
 # ---------- Spell Checker ----------
 class SpellChecker:
