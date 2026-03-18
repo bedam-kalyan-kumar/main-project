@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,10 +16,10 @@
             --border: #e5e7eb;
         }
 
-        * { 
-            margin: 0; 
-            padding: 0; 
-            box-sizing: border-box; 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
@@ -36,7 +37,7 @@
             width: 100%;
             background: white;
             border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             overflow: hidden;
             height: calc(100vh - 30px);
             display: flex;
@@ -56,14 +57,14 @@
             justify-content: space-between;
         }
 
-        h1 { 
-            font-size: 1.5rem; 
+        h1 {
+            font-size: 1.5rem;
             margin: 0;
         }
-        
-        .subtitle { 
-            opacity: 0.9; 
-            font-size: 0.9rem; 
+
+        .subtitle {
+            opacity: 0.9;
+            font-size: 0.9rem;
             margin-top: 4px;
         }
 
@@ -101,7 +102,7 @@
             transform: translateY(-1px);
         }
 
-        .main-content { 
+        .main-content {
             padding: 20px 25px;
             flex: 1;
             display: flex;
@@ -110,7 +111,7 @@
             overflow: hidden;
         }
 
-        .input-section { 
+        .input-section {
             flex-shrink: 0;
         }
 
@@ -182,23 +183,23 @@
             height: 36px;
         }
 
-        .btn-secondary { 
-            background: #f3f4f6; 
-            color: #374151; 
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
         }
-        
-        .btn-secondary:hover { 
-            background: #e5e7eb; 
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
             transform: translateY(-1px);
         }
-        
-        .btn-danger { 
-            background: var(--danger); 
-            color: white; 
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
         }
-        
-        .btn-danger:hover { 
-            background: #dc2626; 
+
+        .btn-danger:hover {
+            background: #dc2626;
             transform: translateY(-1px);
         }
 
@@ -262,16 +263,19 @@
             height: 24px;
         }
 
-        .toggle-switch input { 
-            opacity: 0; 
-            width: 0; 
-            height: 0; 
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
         }
 
         .toggle-slider {
             position: absolute;
             cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
             background: var(--success);
             transition: .3s;
             border-radius: 24px;
@@ -289,12 +293,12 @@
             border-radius: 50%;
         }
 
-        input:checked + .toggle-slider { 
-            background: var(--groq); 
+        input:checked+.toggle-slider {
+            background: var(--groq);
         }
-        
-        input:checked + .toggle-slider:before { 
-            transform: translateX(24px); 
+
+        input:checked+.toggle-slider:before {
+            transform: translateX(24px);
         }
 
         .status-bar {
@@ -387,8 +391,15 @@
         }
 
         @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .pending-header {
@@ -610,7 +621,7 @@
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.5);
+            background-color: rgba(0, 0, 0, 0.5);
             display: none;
             align-items: center;
             justify-content: center;
@@ -624,7 +635,7 @@
             max-height: 80vh;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         }
 
         .modal-header {
@@ -710,6 +721,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <header>
@@ -727,8 +739,9 @@
 
         <div class="main-content">
             <div class="input-section">
-                <textarea id="inputText" placeholder="Start typing... (Space: auto-correct, Esc/Clear: save to history)"></textarea>
-                
+                <textarea id="inputText"
+                    placeholder="Start typing... (Space: auto-correct, Esc/Clear: save to history)"></textarea>
+
                 <div class="input-footer">
                     <span class="char-counter" id="charCount">0 characters</span>
                     <div class="key-hint">
@@ -738,7 +751,8 @@
                 </div>
 
                 <div class="controls-row">
-                    <button class="btn btn-secondary" id="voiceBtn" onclick="predictor.toggleVoiceInput()">🎤 Voice</button>
+                    <button class="btn btn-secondary" id="voiceBtn" onclick="predictor.toggleVoiceInput()">🎤
+                        Voice</button>
                     <button class="btn btn-danger" onclick="predictor.clearText()">🗑️ Clear & Save</button>
 
                     <select id="languageSelect">
@@ -772,7 +786,7 @@
                     <div class="correction-msg" id="correctionMessage"></div>
                 </div>
                 <div class="correction-suggestions" id="correctionSuggestions"></div>
-                
+
                 <!-- Pending Sequence Container (Single Accumulative Sequence) -->
                 <div id="pendingSequenceContainer" class="pending-sequence-container">
                     <div class="pending-header">
@@ -782,7 +796,8 @@
                     <div id="pendingSequenceText" class="pending-sequence"></div>
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span id="pendingWordCount" class="word-count-badge">0 words</span>
-                        <button class="btn btn-success" onclick="predictor.confirmAddPendingSequence()">➕ Add to Dataset</button>
+                        <button class="btn btn-success" onclick="predictor.confirmAddPendingSequence()">➕ Add to
+                            Dataset</button>
                     </div>
                 </div>
             </div>
@@ -804,10 +819,13 @@
                             <h3>Next Word Predictions</h3>
                         </div>
                         <div class="prediction-controls">
-                            <button class="nav-btn" id="prevWordsBtn" onclick="predictor.prevWordsPage()" disabled>← Prev</button>
+                            <button class="nav-btn" id="prevWordsBtn" onclick="predictor.prevWordsPage()" disabled>←
+                                Prev</button>
                             <span class="page-indicator" id="wordsPageInfo">1/1</span>
-                            <button class="nav-btn" id="nextWordsBtn" onclick="predictor.nextWordsPage()">Next →</button>
-                            <button class="nav-btn refresh-btn" id="refreshWordsBtn" onclick="predictor.refreshWords()" title="Get new predictions">⟳</button>
+                            <button class="nav-btn" id="nextWordsBtn" onclick="predictor.nextWordsPage()">Next
+                                →</button>
+                            <button class="nav-btn refresh-btn" id="refreshWordsBtn" onclick="predictor.refreshWords()"
+                                title="Get new predictions">⟳</button>
                         </div>
                     </div>
                     <div class="predictions-list" id="predictionsContainer">
@@ -861,9 +879,9 @@
             <div class="modal-body">
                 <p id="confirmSequenceDisplay"></p>
                 <p id="confirmLanguageDisplay"></p>
-                
+
                 <div class="sequence-preview" id="confirmSequencePreview"></div>
-                
+
                 <p><strong>This complete sequence will be added as a new line in the dataset.</strong></p>
                 <p style="color: #6b7280; font-size: 12px;">After adding, tracking will reset and start fresh.</p>
             </div>
@@ -875,655 +893,658 @@
     </div>
 
     <script>
-    class TextPredictor {
-        constructor() {
-            // DOM Elements
-            this.input = document.getElementById('inputText');
-            this.wordGrid = document.getElementById('wordGrid');
-            this.sentenceList = document.getElementById('sentenceList');
-            this.status = document.getElementById('status');
-            this.detectedLang = document.getElementById('detectedLang');
-            this.responseTime = document.getElementById('responseTime');
-            // Accuracy element kept but commented out
-            // this.accuracyScore = document.getElementById('accuracyScore');
-            this.correctionMessage = document.getElementById('correctionMessage');
-            this.correctionSuggestions = document.getElementById('correctionSuggestions');
-            this.modelBadge = document.getElementById('modelBadge');
-            this.voiceBtn = document.getElementById('voiceBtn');
-            this.languageSelect = document.getElementById('languageSelect');
-            this.autoCorrect = document.getElementById('autoCorrect');
-            this.autoPredict = document.getElementById('autoPredict');
-            this.modelToggle = document.getElementById('modelToggle');
-            this.charCount = document.querySelector('.char-counter');
-            
-            // Pagination elements
-            this.prevWordsBtn = document.getElementById('prevWordsBtn');
-            this.nextWordsBtn = document.getElementById('nextWordsBtn');
-            this.refreshWordsBtn = document.getElementById('refreshWordsBtn');
-            this.wordsPageInfo = document.getElementById('wordsPageInfo');
-            
-            // Pending Sequence Elements
-            this.pendingContainer = document.getElementById('pendingSequenceContainer');
-            this.pendingText = document.getElementById('pendingSequenceText');
-            this.pendingWordCount = document.getElementById('pendingWordCount');
-            
-            this.debounceTimer = null;
-            this.lastInput = '';
-            this.isListening = false;
-            this.recognition = null;
-            this.currentModel = 'ngram';
-            this.allPredictions = [];
-            
-            // Pagination state
-            this.currentPage = 0;
-            this.pageSize = 20;
-            this.totalPages = 1;
-            
-            // Pending sequence tracking (SINGLE accumulative sequence)
-            this.pendingSequence = {
-                text: '',
-                startIndex: -1,
-                language: 'en',
-                isActive: false
-            };
-            
-            this.setupEventListeners();
-            this.initSpeechRecognition();
-            this.checkGroqStatus();
-            this.updateCharCount();
-        }
-        
-        setupEventListeners() {
-            this.input.addEventListener('input', () => this.handleInput());
-            this.input.addEventListener('keydown', (e) => this.handleKeyDown(e));
-            this.modelToggle.addEventListener('change', () => this.toggleModel());
-            
-            ['languageSelect', 'autoCorrect', 'autoPredict'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.addEventListener('change', () => {
-                    if (this.autoPredict.checked) this.predict();
-                });
-            });
-        }
-        
-        // Pagination methods
-        nextWordsPage() {
-            if (this.currentPage < this.totalPages - 1) {
-                this.currentPage++;
-                this.displayWordPredictions();
-                this.updatePaginationButtons();
-            }
-        }
-        
-        prevWordsPage() {
-            if (this.currentPage > 0) {
-                this.currentPage--;
-                this.displayWordPredictions();
-                this.updatePaginationButtons();
-            }
-        }
-        
-        refreshWords() {
-            // Reset to first page and trigger new predictions
-            this.currentPage = 0;
-            this.predict(true); // Pass true to force refresh
-        }
-        
-        updatePaginationButtons() {
-            this.prevWordsBtn.disabled = this.currentPage === 0;
-            this.nextWordsBtn.disabled = this.currentPage >= this.totalPages - 1;
-            this.wordsPageInfo.textContent = `${this.currentPage + 1}/${this.totalPages}`;
-        }
-        
-        updateCharCount() {
-            const count = this.input.value.length;
-            this.charCount.textContent = `${count} character${count !== 1 ? 's' : ''}`;
-        }
-        
-        handleKeyDown(e) {
-            if (e.key === ' ' && this.autoCorrect.checked) {
-                e.preventDefault();
-                this.autoCorrectLastWord();
-                setTimeout(() => {
-                    const cursorPos = this.input.selectionStart;
-                    const before = this.input.value.substring(0, cursorPos);
-                    const after = this.input.value.substring(cursorPos);
-                    this.input.value = before + ' ' + after;
-                    this.input.selectionStart = cursorPos + 1;
-                    this.lastInput = this.input.value;
-                    this.updateCharCount();
-                    
-                    // Check for accumulative sequence
-                    this.checkAccumulativeSequence();
-                    
-                    if (this.autoPredict.checked) this.predict();
-                }, 50);
-            }
-            
-            if (e.key === 'Escape') {
-                this.clearText();
-            }
-        }
-        
-        // Main function to check and update accumulative sequence
-        async checkAccumulativeSequence() {
-            const text = this.input.value.trim();
-            const words = text.split(/\s+/);
-            
-            if (words.length < 3) {
-                // Not enough words for a sequence
-                this.clearPendingSequence();
-                return;
-            }
-            
-            // Detect current language
-            const currentLang = this.detectLanguageFromText(text);
-            
-            // If we have an active pending sequence
-            if (this.pendingSequence.isActive) {
-                // Check if the pending sequence is still valid (starts at same position)
-                const currentFromStart = words.slice(this.pendingSequence.startIndex).join(' ');
-                
-                if (currentFromStart.startsWith(this.pendingSequence.text)) {
-                    // Sequence is still valid, update it if it grew
-                    if (currentFromStart !== this.pendingSequence.text) {
-                        this.pendingSequence.text = currentFromStart;
-                        this.updatePendingDisplay();
-                    }
-                } else {
-                    // Pending sequence no longer valid, clear it
-                    this.clearPendingSequence();
-                    // Try to find a new sequence
-                    await this.findNewSequence(words, currentLang);
-                }
-            } else {
-                // No active sequence, try to find one
-                await this.findNewSequence(words, currentLang);
-            }
-        }
-        
-        // Find the first missing 3-word sequence
-        async findNewSequence(words, lang) {
-            for (let i = 0; i <= words.length - 3; i++) {
-                // Check the 3-word sequence starting at i
-                const threeWordSeq = words.slice(i, i + 3).join(' ');
-                const exists = await this.checkSequenceExists(threeWordSeq, lang);
-                
-                if (!exists) {
-                    // Found a missing sequence starting at i
-                    const fullSequence = words.slice(i).join(' ');
-                    this.pendingSequence = {
-                        text: fullSequence,
-                        startIndex: i,
-                        language: lang,
-                        isActive: true
-                    };
-                    this.showPendingDisplay();
-                    break;
-                }
-            }
-        }
-        
-        // Check if a sequence exists in dataset
-        async checkSequenceExists(sequence, lang) {
-            try {
-                const response = await fetch(`/check_sequence?sequence=${encodeURIComponent(sequence)}&lang=${lang}`);
-                const data = await response.json();
-                return data.exists;
-            } catch (error) {
-                return false;
-            }
-        }
-        
-        // Show pending sequence display
-        showPendingDisplay() {
-            this.updatePendingDisplay();
-            this.pendingContainer.style.display = 'block';
-        }
-        
-        // Update pending sequence display
-        updatePendingDisplay() {
-            if (!this.pendingSequence.isActive) return;
-            
-            const wordCount = this.pendingSequence.text.split(/\s+/).length;
-            this.pendingText.textContent = `"${this.pendingSequence.text}"`;
-            this.pendingWordCount.textContent = `${wordCount} words`;
-        }
-        
-        // Clear pending sequence
-        clearPendingSequence() {
-            this.pendingSequence = {
-                text: '',
-                startIndex: -1,
-                language: 'en',
-                isActive: false
-            };
-            this.pendingContainer.style.display = 'none';
-        }
-        
-        // Confirm add pending sequence
-        confirmAddPendingSequence() {
-            if (!this.pendingSequence.isActive) return;
-            
-            document.getElementById('confirmSequenceDisplay').innerHTML = 
-                `Add sequence of <strong>${this.pendingSequence.text.split(/\s+/).length} words</strong> to dataset?`;
-            document.getElementById('confirmLanguageDisplay').innerHTML = 
-                `Language: <strong>${this.pendingSequence.language}</strong>`;
-            
-            document.getElementById('confirmSequencePreview').innerHTML = 
-                `<strong>Complete sequence to add:</strong><br>"${this.pendingSequence.text}"<br><br>` +
-                `<small style="color:#6b7280;">This will be added as a new line in the ${this.pendingSequence.language}.txt file.</small>`;
-            
-            // Set up confirm button
-            const confirmBtn = document.getElementById('confirmAddBtn');
-            confirmBtn.onclick = () => this.executeAddSequence();
-            
-            document.getElementById('confirmAddModal').style.display = 'flex';
-        }
-        
-        // Execute the sequence addition
-        async executeAddSequence() {
-            if (!this.pendingSequence.isActive) {
-                this.closeConfirmModal();
-                return;
-            }
-            
-            try {
-                const response = await fetch('/add_sequence_newline', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        sequence: this.pendingSequence.text,
-                        lang: this.pendingSequence.language
-                    })
-                });
-                const data = await response.json();
-                this.showMessage(data.message);
-                
-                if (data.success) {
-                    // Clear pending sequence after successful add
-                    this.clearPendingSequence();
-                }
-            } catch (error) {}
-            
-            this.closeConfirmModal();
-        }
-        
-        // Close confirm modal
-        closeConfirmModal() {
-            document.getElementById('confirmAddModal').style.display = 'none';
-        }
-        
-        // Detect language from text
-        detectLanguageFromText(text) {
-            if (this.languageSelect.value !== 'auto') {
-                return this.languageSelect.value;
-            }
-            
-            const hindiRange = /[\u0900-\u097F]/;
-            const teluguRange = /[\u0C00-\u0C7F]/;
-            const tamilRange = /[\u0B80-\u0BFF]/;
-            const kannadaRange = /[\u0C80-\u0CFF]/;
-            
-            if (hindiRange.test(text)) return 'hi';
-            if (teluguRange.test(text)) return 'te';
-            if (tamilRange.test(text)) return 'ta';
-            if (kannadaRange.test(text)) return 'kn';
-            
-            return 'en';
-        }
-        
-        async autoCorrectLastWord() {
-            const text = this.input.value;
-            if (!text.trim()) return;
-            
-            const cursorPos = this.input.selectionStart;
-            const textBefore = text.substring(0, cursorPos);
-            const words = textBefore.trim().split(/\s+/);
-            const lastWord = words[words.length - 1];
-            
-            if (!lastWord || lastWord.length < 2) return;
-            
-            const lang = this.languageSelect.value === 'auto' ? 'en' : this.languageSelect.value;
-            
-            try {
-                const response = await fetch(`/correct?text=${encodeURIComponent(lastWord)}&lang=${lang}`);
-                const data = await response.json();
-                if (data.corrected && data.corrected !== data.original) {
-                    this.showCorrectionSuggestions([data.corrected], lastWord);
-                }
-            } catch (error) {}
-        }
-        
-        showCorrectionSuggestions(suggestions, originalWord) {
-            let html = '<strong>Did you mean:</strong> ';
-            suggestions.forEach(s => {
-                html += `<span class="correction-suggestion" onclick="predictor.applyCorrection('${originalWord}', '${s}')">${s}</span>`;
-            });
-            this.correctionSuggestions.innerHTML = html;
-            this.correctionSuggestions.style.display = 'block';
-        }
-        
-        applyCorrection(original, corrected) {
-            const text = this.input.value;
-            const cursorPos = this.input.selectionStart;
-            const before = text.substring(0, cursorPos);
-            const after = text.substring(cursorPos);
-            
-            const words = before.trim().split(/\s+/);
-            words[words.length - 1] = corrected;
-            
-            this.input.value = words.join(' ') + after;
-            this.input.selectionStart = words.join(' ').length;
-            this.lastInput = this.input.value;
-            this.updateCharCount();
-            this.correctionSuggestions.style.display = 'none';
-            this.showMessage(`✓ Corrected to "${corrected}"`);
-            
-            // Check sequences after correction
-            this.checkAccumulativeSequence();
-            
-            if (this.autoPredict.checked) this.predict();
-        }
-        
-        toggleModel() {
-            this.currentModel = this.modelToggle.checked ? 'groq' : 'ngram';
-            this.modelBadge.textContent = this.currentModel === 'groq' ? 'Groq AI' : 'N-gram';
-            if (this.autoPredict.checked) this.predict();
-        }
-        
-        async checkGroqStatus() {
-            try {
-                const response = await fetch('/groq_status');
-                const data = await response.json();
-                this.groqAvailable = data.available;
-            } catch (error) {}
-        }
-        
-        initSpeechRecognition() {
-            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                this.recognition = new SpeechRecognition();
-                this.recognition.continuous = false;
-                this.recognition.interimResults = false;
-                
-                this.recognition.onstart = () => {
-                    this.isListening = true;
-                    this.voiceBtn.innerHTML = '⏹️ Stop';
-                    this.showMessage('🎤 Listening...');
+        class TextPredictor {
+            constructor() {
+                // DOM Elements
+                this.input = document.getElementById('inputText');
+                this.wordGrid = document.getElementById('wordGrid');
+                this.sentenceList = document.getElementById('sentenceList');
+                this.status = document.getElementById('status');
+                this.detectedLang = document.getElementById('detectedLang');
+                this.responseTime = document.getElementById('responseTime');
+                // Accuracy element kept but commented out
+                // this.accuracyScore = document.getElementById('accuracyScore');
+                this.correctionMessage = document.getElementById('correctionMessage');
+                this.correctionSuggestions = document.getElementById('correctionSuggestions');
+                this.modelBadge = document.getElementById('modelBadge');
+                this.voiceBtn = document.getElementById('voiceBtn');
+                this.languageSelect = document.getElementById('languageSelect');
+                this.autoCorrect = document.getElementById('autoCorrect');
+                this.autoPredict = document.getElementById('autoPredict');
+                this.modelToggle = document.getElementById('modelToggle');
+                this.charCount = document.querySelector('.char-counter');
+
+                // Pagination elements
+                this.prevWordsBtn = document.getElementById('prevWordsBtn');
+                this.nextWordsBtn = document.getElementById('nextWordsBtn');
+                this.refreshWordsBtn = document.getElementById('refreshWordsBtn');
+                this.wordsPageInfo = document.getElementById('wordsPageInfo');
+
+                // Pending Sequence Elements
+                this.pendingContainer = document.getElementById('pendingSequenceContainer');
+                this.pendingText = document.getElementById('pendingSequenceText');
+                this.pendingWordCount = document.getElementById('pendingWordCount');
+
+                this.debounceTimer = null;
+                this.lastInput = '';
+                this.isListening = false;
+                this.recognition = null;
+                this.currentModel = 'ngram';
+                this.allPredictions = [];
+
+                // Pagination state
+                this.currentPage = 0;
+                this.pageSize = 20;
+                this.totalPages = 1;
+
+                // Pending sequence tracking (SINGLE accumulative sequence)
+                this.pendingSequence = {
+                    text: '',
+                    startIndex: -1,
+                    language: 'en',
+                    isActive: false
                 };
-                
-                this.recognition.onresult = (event) => {
-                    const text = event.results[0][0].transcript;
-                    this.insertText(text);
-                };
-                
-                this.recognition.onend = () => {
-                    this.isListening = false;
-                    this.voiceBtn.innerHTML = '🎤 Voice';
-                };
+
+                this.setupEventListeners();
+                this.initSpeechRecognition();
+                this.checkGroqStatus();
+                this.updateCharCount();
             }
-        }
-        
-        insertText(text) {
-            const cursorPos = this.input.selectionStart;
-            const before = this.input.value.substring(0, cursorPos);
-            const after = this.input.value.substring(cursorPos);
-            
-            const insertText = (before && !before.endsWith(' ')) ? ' ' + text : text;
-            this.input.value = before + insertText + after;
-            this.input.selectionStart = cursorPos + insertText.length;
-            this.lastInput = this.input.value;
-            this.updateCharCount();
-            
-            // Check sequences after voice input
-            this.checkAccumulativeSequence();
-            
-            if (this.autoPredict.checked) this.predict();
-        }
-        
-        toggleVoiceInput() {
-            if (!this.recognition) return;
-            if (this.isListening) {
-                this.recognition.stop();
-            } else {
-                const langMap = {'en':'en-US','hi':'hi-IN'};
-                const lang = this.languageSelect.value === 'auto' ? 'en' : this.languageSelect.value;
-                this.recognition.lang = langMap[lang] || 'en-US';
-                try { this.recognition.start(); } catch (e) {}
-            }
-        }
-        
-        showMessage(message) {
-            this.correctionMessage.textContent = message;
-            this.correctionMessage.style.display = 'block';
-            setTimeout(() => this.correctionMessage.style.display = 'none', 3000);
-        }
-        
-        async saveToHistory() {
-            const text = this.input.value.trim();
-            if (!text) return;
-            
-            try {
-                await fetch('/save_history', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        text: text,
-                        language: this.detectedLang.textContent.toLowerCase(),
-                        model_used: this.currentModel,
-                        predictions: this.allPredictions.slice(0, 10)
-                    })
+
+            setupEventListeners() {
+                this.input.addEventListener('input', () => this.handleInput());
+                this.input.addEventListener('keydown', (e) => this.handleKeyDown(e));
+                this.modelToggle.addEventListener('change', () => this.toggleModel());
+
+                ['languageSelect', 'autoCorrect', 'autoPredict'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.addEventListener('change', () => {
+                        if (this.autoPredict.checked) this.predict();
+                    });
                 });
-            } catch (error) {}
-        }
-        
-        clearText() {
-            if (this.input.value.trim()) {
-                this.saveToHistory();
             }
-            
-            this.input.value = '';
-            this.updateCharCount();
-            this.wordGrid.innerHTML = '<div class="loading">Start typing to see predictions...</div>';
-            this.sentenceList.innerHTML = '<div class="loading">Continuations will appear here...</div>';
-            this.detectedLang.textContent = 'EN';
-            this.responseTime.textContent = '-';
-            // Accuracy element kept but commented out
-            // this.accuracyScore.textContent = '--%';
-            // this.accuracyScore.style.background = 'var(--success)';
-            this.status.textContent = 'Ready';
-            this.input.focus();
-            
-            // Reset pagination
-            this.currentPage = 0;
-            this.totalPages = 1;
-            this.updatePaginationButtons();
-            
-            // Clear pending sequence
-            this.clearPendingSequence();
-            this.correctionSuggestions.style.display = 'none';
-        }
-        
-        handleInput() {
-            this.updateCharCount();
-            this.correctionSuggestions.style.display = 'none';
-            
-            if (!this.autoPredict.checked) return;
-            
-            clearTimeout(this.debounceTimer);
-            const currentText = this.input.value;
-            
-            if (currentText === this.lastInput) return;
-            this.lastInput = currentText;
-            
-            if (!currentText.trim()) {
-                this.wordGrid.innerHTML = '<div class="loading">Start typing to see predictions...</div>';
-                this.sentenceList.innerHTML = '<div class="loading">Continuations will appear here...</div>';
-                return;
-            }
-            
-            this.debounceTimer = setTimeout(() => this.predict(), 300);
-        }
-        
-        async predict(forceRefresh = false) {
-            const text = this.input.value.trim();
-            if (!text) return;
-            
-            try {
-                this.status.textContent = 'Predicting...';
-                
-                // Add a timestamp parameter to force refresh if needed
-                const params = new URLSearchParams({
-                    text: text,
-                    lang: this.languageSelect.value,
-                    model_type: this.currentModel,
-                    auto_correct: this.autoCorrect.checked ? 'true' : 'false',
-                    include_sentences: 'true',
-                    num_words: '60' // Request more words to have enough for pagination
-                });
-                
-                if (forceRefresh) {
-                    params.append('t', Date.now()); // Add timestamp to bypass cache
-                }
-                
-                const response = await fetch(`/predict?${params}`);
-                
-                if (!response.ok) {
-                    console.error('HTTP error:', response.status);
-                    this.status.textContent = 'Error';
-                    return;
-                }
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    this.allPredictions = data.predictions || [];
-                    this.totalPages = Math.ceil(this.allPredictions.length / this.pageSize);
-                    if (this.totalPages === 0) this.totalPages = 1;
-                    
-                    // Reset to first page on new predictions unless refreshing
-                    if (!forceRefresh) {
-                        this.currentPage = 0;
-                    }
-                    
+
+            // Pagination methods
+            nextWordsPage() {
+                if (this.currentPage < this.totalPages - 1) {
+                    this.currentPage++;
                     this.displayWordPredictions();
-                    this.displayContinuations(data);
-                    this.updateStatus(data);
                     this.updatePaginationButtons();
                 }
-            } catch (error) {
-                console.error('Prediction error:', error);
-                this.status.textContent = 'Error';
             }
-        }
-        
-        displayWordPredictions() {
-            if (!this.allPredictions.length) {
-                this.wordGrid.innerHTML = '<div class="loading">No predictions</div>';
-                return;
+
+            prevWordsPage() {
+                if (this.currentPage > 0) {
+                    this.currentPage--;
+                    this.displayWordPredictions();
+                    this.updatePaginationButtons();
+                }
             }
-            
-            const start = this.currentPage * this.pageSize;
-            const end = start + this.pageSize;
-            const predictionsToShow = this.allPredictions.slice(start, end);
-            
-            if (predictionsToShow.length === 0) {
-                this.wordGrid.innerHTML = '<div class="loading">No more predictions</div>';
-                return;
+
+            refreshWords() {
+                // Reset to first page and trigger new predictions
+                this.currentPage = 0;
+                this.predict(true); // Pass true to force refresh
             }
-            
-            const html = predictionsToShow.map((pred, index) => {
-                const globalIndex = start + index + 1;
-                return `<div class="prediction-item" onclick="predictor.insertWord('${pred.replace(/'/g, "\\'")}')">
+
+            updatePaginationButtons() {
+                this.prevWordsBtn.disabled = this.currentPage === 0;
+                this.nextWordsBtn.disabled = this.currentPage >= this.totalPages - 1;
+                this.wordsPageInfo.textContent = `${this.currentPage + 1}/${this.totalPages}`;
+            }
+
+            updateCharCount() {
+                const count = this.input.value.length;
+                this.charCount.textContent = `${count} character${count !== 1 ? 's' : ''}`;
+            }
+
+            handleKeyDown(e) {
+                if (e.key === ' ' && this.autoCorrect.checked) {
+                    e.preventDefault();
+                    this.autoCorrectLastWord();
+                    setTimeout(() => {
+                        const cursorPos = this.input.selectionStart;
+                        const before = this.input.value.substring(0, cursorPos);
+                        const after = this.input.value.substring(cursorPos);
+                        this.input.value = before + ' ' + after;
+                        this.input.selectionStart = cursorPos + 1;
+                        this.lastInput = this.input.value;
+                        this.updateCharCount();
+
+                        // Check for accumulative sequence
+                        this.checkAccumulativeSequence();
+
+                        if (this.autoPredict.checked) this.predict();
+                    }, 50);
+                }
+
+                if (e.key === 'Escape') {
+                    this.clearText();
+                }
+            }
+
+            // Main function to check and update accumulative sequence
+            async checkAccumulativeSequence() {
+                const text = this.input.value.trim();
+                const words = text.split(/\s+/);
+
+                if (words.length < 3) {
+                    // Not enough words for a sequence
+                    this.clearPendingSequence();
+                    return;
+                }
+
+                // Detect current language
+                const currentLang = this.detectLanguageFromText(text);
+
+                // If we have an active pending sequence
+                if (this.pendingSequence.isActive) {
+                    // Check if the pending sequence is still valid (starts at same position)
+                    const currentFromStart = words.slice(this.pendingSequence.startIndex).join(' ');
+
+                    if (currentFromStart.startsWith(this.pendingSequence.text)) {
+                        // Sequence is still valid, update it if it grew
+                        if (currentFromStart !== this.pendingSequence.text) {
+                            this.pendingSequence.text = currentFromStart;
+                            this.updatePendingDisplay();
+                        }
+                    } else {
+                        // Pending sequence no longer valid, clear it
+                        this.clearPendingSequence();
+                        // Try to find a new sequence
+                        await this.findNewSequence(words, currentLang);
+                    }
+                } else {
+                    // No active sequence, try to find one
+                    await this.findNewSequence(words, currentLang);
+                }
+            }
+
+            // Find the first missing 3-word sequence
+            async findNewSequence(words, lang) {
+                for (let i = 0; i <= words.length - 3; i++) {
+                    // Check the 3-word sequence starting at i
+                    const threeWordSeq = words.slice(i, i + 3).join(' ');
+                    const exists = await this.checkSequenceExists(threeWordSeq, lang);
+
+                    if (!exists) {
+                        // Found a missing sequence starting at i
+                        const fullSequence = words.slice(i).join(' ');
+                        this.pendingSequence = {
+                            text: fullSequence,
+                            startIndex: i,
+                            language: lang,
+                            isActive: true
+                        };
+                        this.showPendingDisplay();
+                        break;
+                    }
+                }
+            }
+
+            // Check if a sequence exists in dataset
+            async checkSequenceExists(sequence, lang) {
+                try {
+                    const response = await fetch(`/check_sequence?sequence=${encodeURIComponent(sequence)}&lang=${lang}`);
+                    const data = await response.json();
+                    return data.exists;
+                } catch (error) {
+                    return false;
+                }
+            }
+
+            // Show pending sequence display
+            showPendingDisplay() {
+                this.updatePendingDisplay();
+                this.pendingContainer.style.display = 'block';
+            }
+
+            // Update pending sequence display
+            updatePendingDisplay() {
+                if (!this.pendingSequence.isActive) return;
+
+                const wordCount = this.pendingSequence.text.split(/\s+/).length;
+                this.pendingText.textContent = `"${this.pendingSequence.text}"`;
+                this.pendingWordCount.textContent = `${wordCount} words`;
+            }
+
+            // Clear pending sequence
+            clearPendingSequence() {
+                this.pendingSequence = {
+                    text: '',
+                    startIndex: -1,
+                    language: 'en',
+                    isActive: false
+                };
+                this.pendingContainer.style.display = 'none';
+            }
+
+            // Confirm add pending sequence
+            confirmAddPendingSequence() {
+                if (!this.pendingSequence.isActive) return;
+
+                document.getElementById('confirmSequenceDisplay').innerHTML =
+                    `Add sequence of <strong>${this.pendingSequence.text.split(/\s+/).length} words</strong> to dataset?`;
+                document.getElementById('confirmLanguageDisplay').innerHTML =
+                    `Language: <strong>${this.pendingSequence.language}</strong>`;
+
+                document.getElementById('confirmSequencePreview').innerHTML =
+                    `<strong>Complete sequence to add:</strong><br>"${this.pendingSequence.text}"<br><br>` +
+                    `<small style="color:#6b7280;">This will be added as a new line in the ${this.pendingSequence.language}.txt file.</small>`;
+
+                // Set up confirm button
+                const confirmBtn = document.getElementById('confirmAddBtn');
+                confirmBtn.onclick = () => this.executeAddSequence();
+
+                document.getElementById('confirmAddModal').style.display = 'flex';
+            }
+
+            // Execute the sequence addition
+            async executeAddSequence() {
+                if (!this.pendingSequence.isActive) {
+                    this.closeConfirmModal();
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/add_sequence_newline', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            sequence: this.pendingSequence.text,
+                            lang: this.pendingSequence.language
+                        })
+                    });
+                    const data = await response.json();
+                    this.showMessage(data.message);
+
+                    if (data.success) {
+                        // Clear pending sequence after successful add
+                        this.clearPendingSequence();
+                    }
+                } catch (error) { }
+
+                this.closeConfirmModal();
+            }
+
+            // Close confirm modal
+            closeConfirmModal() {
+                document.getElementById('confirmAddModal').style.display = 'none';
+            }
+
+            // Detect language from text
+            detectLanguageFromText(text) {
+                if (this.languageSelect.value !== 'auto') {
+                    return this.languageSelect.value;
+                }
+
+                const hindiRange = /[\u0900-\u097F]/;
+                const teluguRange = /[\u0C00-\u0C7F]/;
+                const tamilRange = /[\u0B80-\u0BFF]/;
+                const kannadaRange = /[\u0C80-\u0CFF]/;
+
+                if (hindiRange.test(text)) return 'hi';
+                if (teluguRange.test(text)) return 'te';
+                if (tamilRange.test(text)) return 'ta';
+                if (kannadaRange.test(text)) return 'kn';
+
+                return 'en';
+            }
+
+            async autoCorrectLastWord() {
+                const text = this.input.value;
+                if (!text.trim()) return;
+
+                const cursorPos = this.input.selectionStart;
+                const textBefore = text.substring(0, cursorPos);
+                const words = textBefore.trim().split(/\s+/);
+                const lastWord = words[words.length - 1];
+
+                if (!lastWord || lastWord.length < 2) return;
+
+                const lang = this.languageSelect.value === 'auto' ? 'en' : this.languageSelect.value;
+
+                try {
+                    const response = await fetch(`/correct?text=${encodeURIComponent(lastWord)}&lang=${lang}`);
+                    const data = await response.json();
+                    if (data.suggestions && data.suggestions.length > 0) {
+                        this.showCorrectionSuggestions(data.suggestions, lastWord);
+                    } else if (data.corrected && data.corrected !== data.original) {
+                        // fallback for older backend
+                        this.showCorrectionSuggestions([data.corrected], lastWord);
+                    }
+                } catch (error) { }
+            }
+
+            showCorrectionSuggestions(suggestions, originalWord) {
+                let html = '<strong>Did you mean:</strong> ';
+                suggestions.forEach(s => {
+                    html += `<span class="correction-suggestion" onclick="predictor.applyCorrection('${originalWord}', '${s}')">${s}</span>`;
+                });
+                this.correctionSuggestions.innerHTML = html;
+                this.correctionSuggestions.style.display = 'block';
+            }
+
+            applyCorrection(original, corrected) {
+                const text = this.input.value;
+                const cursorPos = this.input.selectionStart;
+                const before = text.substring(0, cursorPos);
+                const after = text.substring(cursorPos);
+
+                const words = before.trim().split(/\s+/);
+                words[words.length - 1] = corrected;
+
+                this.input.value = words.join(' ') + after;
+                this.input.selectionStart = words.join(' ').length;
+                this.lastInput = this.input.value;
+                this.updateCharCount();
+                this.correctionSuggestions.style.display = 'none';
+                this.showMessage(`✓ Corrected to "${corrected}"`);
+
+                // Check sequences after correction
+                this.checkAccumulativeSequence();
+
+                if (this.autoPredict.checked) this.predict();
+            }
+
+            toggleModel() {
+                this.currentModel = this.modelToggle.checked ? 'groq' : 'ngram';
+                this.modelBadge.textContent = this.currentModel === 'groq' ? 'Groq AI' : 'N-gram';
+                if (this.autoPredict.checked) this.predict();
+            }
+
+            async checkGroqStatus() {
+                try {
+                    const response = await fetch('/groq_status');
+                    const data = await response.json();
+                    this.groqAvailable = data.available;
+                } catch (error) { }
+            }
+
+            initSpeechRecognition() {
+                if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    this.recognition = new SpeechRecognition();
+                    this.recognition.continuous = false;
+                    this.recognition.interimResults = false;
+
+                    this.recognition.onstart = () => {
+                        this.isListening = true;
+                        this.voiceBtn.innerHTML = '⏹️ Stop';
+                        this.showMessage('🎤 Listening...');
+                    };
+
+                    this.recognition.onresult = (event) => {
+                        const text = event.results[0][0].transcript;
+                        this.insertText(text);
+                    };
+
+                    this.recognition.onend = () => {
+                        this.isListening = false;
+                        this.voiceBtn.innerHTML = '🎤 Voice';
+                    };
+                }
+            }
+
+            insertText(text) {
+                const cursorPos = this.input.selectionStart;
+                const before = this.input.value.substring(0, cursorPos);
+                const after = this.input.value.substring(cursorPos);
+
+                const insertText = (before && !before.endsWith(' ')) ? ' ' + text : text;
+                this.input.value = before + insertText + after;
+                this.input.selectionStart = cursorPos + insertText.length;
+                this.lastInput = this.input.value;
+                this.updateCharCount();
+
+                // Check sequences after voice input
+                this.checkAccumulativeSequence();
+
+                if (this.autoPredict.checked) this.predict();
+            }
+
+            toggleVoiceInput() {
+                if (!this.recognition) return;
+                if (this.isListening) {
+                    this.recognition.stop();
+                } else {
+                    const langMap = { 'en': 'en-US', 'hi': 'hi-IN' };
+                    const lang = this.languageSelect.value === 'auto' ? 'en' : this.languageSelect.value;
+                    this.recognition.lang = langMap[lang] || 'en-US';
+                    try { this.recognition.start(); } catch (e) { }
+                }
+            }
+
+            showMessage(message) {
+                this.correctionMessage.textContent = message;
+                this.correctionMessage.style.display = 'block';
+                setTimeout(() => this.correctionMessage.style.display = 'none', 3000);
+            }
+
+            async saveToHistory() {
+                const text = this.input.value.trim();
+                if (!text) return;
+
+                try {
+                    await fetch('/save_history', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            text: text,
+                            language: this.detectedLang.textContent.toLowerCase(),
+                            model_used: this.currentModel,
+                            predictions: this.allPredictions.slice(0, 10)
+                        })
+                    });
+                } catch (error) { }
+            }
+
+            clearText() {
+                if (this.input.value.trim()) {
+                    this.saveToHistory();
+                }
+
+                this.input.value = '';
+                this.updateCharCount();
+                this.wordGrid.innerHTML = '<div class="loading">Start typing to see predictions...</div>';
+                this.sentenceList.innerHTML = '<div class="loading">Continuations will appear here...</div>';
+                this.detectedLang.textContent = 'EN';
+                this.responseTime.textContent = '-';
+                // Accuracy element kept but commented out
+                // this.accuracyScore.textContent = '--%';
+                // this.accuracyScore.style.background = 'var(--success)';
+                this.status.textContent = 'Ready';
+                this.input.focus();
+
+                // Reset pagination
+                this.currentPage = 0;
+                this.totalPages = 1;
+                this.updatePaginationButtons();
+
+                // Clear pending sequence
+                this.clearPendingSequence();
+                this.correctionSuggestions.style.display = 'none';
+            }
+
+            handleInput() {
+                this.updateCharCount();
+                this.correctionSuggestions.style.display = 'none';
+
+                if (!this.autoPredict.checked) return;
+
+                clearTimeout(this.debounceTimer);
+                const currentText = this.input.value;
+
+                if (currentText === this.lastInput) return;
+                this.lastInput = currentText;
+
+                if (!currentText.trim()) {
+                    this.wordGrid.innerHTML = '<div class="loading">Start typing to see predictions...</div>';
+                    this.sentenceList.innerHTML = '<div class="loading">Continuations will appear here...</div>';
+                    return;
+                }
+
+                this.debounceTimer = setTimeout(() => this.predict(), 300);
+            }
+
+            async predict(forceRefresh = false) {
+                const text = this.input.value.trim();
+                if (!text) return;
+
+                try {
+                    this.status.textContent = 'Predicting...';
+
+                    // Add a timestamp parameter to force refresh if needed
+                    const params = new URLSearchParams({
+                        text: text,
+                        lang: this.languageSelect.value,
+                        model_type: this.currentModel,
+                        auto_correct: this.autoCorrect.checked ? 'true' : 'false',
+                        include_sentences: 'true',
+                        num_words: '60' // Request more words to have enough for pagination
+                    });
+
+                    if (forceRefresh) {
+                        params.append('t', Date.now()); // Add timestamp to bypass cache
+                    }
+
+                    const response = await fetch(`/predict?${params}`);
+
+                    if (!response.ok) {
+                        console.error('HTTP error:', response.status);
+                        this.status.textContent = 'Error';
+                        return;
+                    }
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        this.allPredictions = data.predictions || [];
+                        this.totalPages = Math.ceil(this.allPredictions.length / this.pageSize);
+                        if (this.totalPages === 0) this.totalPages = 1;
+
+                        // Reset to first page on new predictions unless refreshing
+                        if (!forceRefresh) {
+                            this.currentPage = 0;
+                        }
+
+                        this.displayWordPredictions();
+                        this.displayContinuations(data);
+                        this.updateStatus(data);
+                        this.updatePaginationButtons();
+                    }
+                } catch (error) {
+                    console.error('Prediction error:', error);
+                    this.status.textContent = 'Error';
+                }
+            }
+
+            displayWordPredictions() {
+                if (!this.allPredictions.length) {
+                    this.wordGrid.innerHTML = '<div class="loading">No predictions</div>';
+                    return;
+                }
+
+                const start = this.currentPage * this.pageSize;
+                const end = start + this.pageSize;
+                const predictionsToShow = this.allPredictions.slice(start, end);
+
+                if (predictionsToShow.length === 0) {
+                    this.wordGrid.innerHTML = '<div class="loading">No more predictions</div>';
+                    return;
+                }
+
+                const html = predictionsToShow.map((pred, index) => {
+                    const globalIndex = start + index + 1;
+                    return `<div class="prediction-item" onclick="predictor.insertWord('${pred.replace(/'/g, "\\'")}')">
                     <span class="prediction-index">${globalIndex}</span>
                     ${pred}
                 </div>`;
-            }).join('');
-            
-            this.wordGrid.innerHTML = html;
-        }
-        
-        displayContinuations(data) {
-            const conts = data.sentence_predictions || [];
-            if (!conts.length) {
-                this.sentenceList.innerHTML = '<div class="loading">No continuations</div>';
-                return;
+                }).join('');
+
+                this.wordGrid.innerHTML = html;
             }
-            
-            const html = conts.slice(0, 5).map(cont => 
-                `<div class="sentence-item" onclick="predictor.insertContinuation('${cont.replace(/'/g, "\\'")}')">${cont}</div>`
-            ).join('');
-            
-            this.sentenceList.innerHTML = html;
-        }
-        
-        insertContinuation(cont) {
-            const cursorPos = this.input.selectionStart;
-            const before = this.input.value.substring(0, cursorPos);
-            const after = this.input.value.substring(cursorPos);
-            
-            const insertText = (before && !before.endsWith(' ')) ? ' ' + cont : cont;
-            this.input.value = before + insertText + after;
-            this.input.selectionStart = cursorPos + insertText.length;
-            this.lastInput = this.input.value;
-            this.updateCharCount();
-            
-            // Check sequences after insertion
-            this.checkAccumulativeSequence();
-            
-            if (this.autoPredict.checked) this.predict();
-            this.input.focus();
-        }
-        
-        insertWord(word) {
-            const cursorPos = this.input.selectionStart;
-            const before = this.input.value.substring(0, cursorPos);
-            const after = this.input.value.substring(cursorPos);
-            
-            const insert = (before && !before.endsWith(' ')) ? ' ' + word : word;
-            this.input.value = before + insert + after;
-            this.input.selectionStart = cursorPos + insert.length;
-            this.lastInput = this.input.value;
-            this.updateCharCount();
-            
-            // Check sequences after word insertion
-            this.checkAccumulativeSequence();
-            
-            if (this.autoPredict.checked) this.predict();
-            this.input.focus();
-        }
-        
-        updateStatus(data) {
-            this.detectedLang.textContent = (data.language || 'en').toUpperCase();
-            this.responseTime.textContent = data.response_time_ms || '-';
-            this.status.textContent = 'Ready';
-            
-            // Accuracy element kept but commented out
-            // let accuracy = data.accuracy_score || 0.8;
-            // this.accuracyScore.textContent = Math.round(accuracy * 100) + '%';
-            // 
-            // if (accuracy >= 0.85) {
-            //     this.accuracyScore.style.background = 'var(--success)';
-            // } else if (accuracy >= 0.7) {
-            //     this.accuracyScore.style.background = 'var(--warning)';
-            // } else {
-            //     this.accuracyScore.style.background = 'var(--danger)';
-            // }
-        }
-        
-        async showHistory() {
-            document.getElementById('historyModal').style.display = 'flex';
-            document.getElementById('historyContent').innerHTML = '<div class="loading">Loading history...</div>';
-            
-            try {
-                const response = await fetch('/history?limit=50');
-                const data = await response.json();
-                
-                if (data.success && data.history.length) {
-                    let html = '';
-                    data.history.forEach(item => {
-                        html += `
+
+            displayContinuations(data) {
+                const conts = data.sentence_predictions || [];
+                if (!conts.length) {
+                    this.sentenceList.innerHTML = '<div class="loading">No continuations</div>';
+                    return;
+                }
+
+                const html = conts.slice(0, 5).map(cont =>
+                    `<div class="sentence-item" onclick="predictor.insertContinuation('${cont.replace(/'/g, "\\'")}')">${cont}</div>`
+                ).join('');
+
+                this.sentenceList.innerHTML = html;
+            }
+
+            insertContinuation(cont) {
+                const cursorPos = this.input.selectionStart;
+                const before = this.input.value.substring(0, cursorPos);
+                const after = this.input.value.substring(cursorPos);
+
+                const insertText = (before && !before.endsWith(' ')) ? ' ' + cont : cont;
+                this.input.value = before + insertText + after;
+                this.input.selectionStart = cursorPos + insertText.length;
+                this.lastInput = this.input.value;
+                this.updateCharCount();
+
+                // Check sequences after insertion
+                this.checkAccumulativeSequence();
+
+                if (this.autoPredict.checked) this.predict();
+                this.input.focus();
+            }
+
+            insertWord(word) {
+                const cursorPos = this.input.selectionStart;
+                const before = this.input.value.substring(0, cursorPos);
+                const after = this.input.value.substring(cursorPos);
+
+                const insert = (before && !before.endsWith(' ')) ? ' ' + word : word;
+                this.input.value = before + insert + after;
+                this.input.selectionStart = cursorPos + insert.length;
+                this.lastInput = this.input.value;
+                this.updateCharCount();
+
+                // Check sequences after word insertion
+                this.checkAccumulativeSequence();
+
+                if (this.autoPredict.checked) this.predict();
+                this.input.focus();
+            }
+
+            updateStatus(data) {
+                this.detectedLang.textContent = (data.language || 'en').toUpperCase();
+                this.responseTime.textContent = data.response_time_ms || '-';
+                this.status.textContent = 'Ready';
+
+                // Accuracy element kept but commented out
+                // let accuracy = data.accuracy_score || 0.8;
+                // this.accuracyScore.textContent = Math.round(accuracy * 100) + '%';
+                // 
+                // if (accuracy >= 0.85) {
+                //     this.accuracyScore.style.background = 'var(--success)';
+                // } else if (accuracy >= 0.7) {
+                //     this.accuracyScore.style.background = 'var(--warning)';
+                // } else {
+                //     this.accuracyScore.style.background = 'var(--danger)';
+                // }
+            }
+
+            async showHistory() {
+                document.getElementById('historyModal').style.display = 'flex';
+                document.getElementById('historyContent').innerHTML = '<div class="loading">Loading history...</div>';
+
+                try {
+                    const response = await fetch('/history?limit=50');
+                    const data = await response.json();
+
+                    if (data.success && data.history.length) {
+                        let html = '';
+                        data.history.forEach(item => {
+                            html += `
                             <div class="history-item">
                                 <div class="history-header">
                                     <span>${new Date(item.timestamp).toLocaleString()}</span>
@@ -1531,43 +1552,44 @@
                                 </div>
                                 <div class="history-input" onclick="predictor.loadHistoryItem('${item.input_text.replace(/'/g, "\\'")}')">"${item.input_text}"</div>
                             </div>`;
-                    });
-                    document.getElementById('historyContent').innerHTML = html;
-                } else {
-                    document.getElementById('historyContent').innerHTML = '<div class="loading">No history yet. Press Esc or Clear to save!</div>';
-                }
-            } catch (error) {}
+                        });
+                        document.getElementById('historyContent').innerHTML = html;
+                    } else {
+                        document.getElementById('historyContent').innerHTML = '<div class="loading">No history yet. Press Esc or Clear to save!</div>';
+                    }
+                } catch (error) { }
+            }
+
+            loadHistoryItem(text) {
+                this.input.value = text;
+                this.lastInput = text;
+                this.updateCharCount();
+                this.closeHistory();
+                if (this.autoPredict.checked) this.predict();
+                this.input.focus();
+            }
+
+            async deleteHistoryItem(id) {
+                if (!confirm('Delete this item?')) return;
+                await fetch(`/history/${id}`, { method: 'DELETE' });
+                this.showHistory();
+            }
+
+            async clearHistory() {
+                if (!confirm('Clear all history?')) return;
+                await fetch('/history', { method: 'DELETE' });
+                this.showHistory();
+            }
+
+            closeHistory() {
+                document.getElementById('historyModal').style.display = 'none';
+            }
         }
-        
-        loadHistoryItem(text) {
-            this.input.value = text;
-            this.lastInput = text;
-            this.updateCharCount();
-            this.closeHistory();
-            if (this.autoPredict.checked) this.predict();
-            this.input.focus();
-        }
-        
-        async deleteHistoryItem(id) {
-            if (!confirm('Delete this item?')) return;
-            await fetch(`/history/${id}`, {method:'DELETE'});
-            this.showHistory();
-        }
-        
-        async clearHistory() {
-            if (!confirm('Clear all history?')) return;
-            await fetch('/history', {method:'DELETE'});
-            this.showHistory();
-        }
-        
-        closeHistory() { 
-            document.getElementById('historyModal').style.display = 'none'; 
-        }
-    }
-    
-    let predictor;
-    document.addEventListener('DOMContentLoaded', () => predictor = new TextPredictor());
-    
+
+        let predictor;
+        document.addEventListener('DOMContentLoaded', () => predictor = new TextPredictor());
+
     </script>
 </body>
+
 </html>
